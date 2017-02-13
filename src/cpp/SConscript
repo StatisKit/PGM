@@ -1,0 +1,21 @@
+# -*-python-*-
+
+import os
+import platform
+
+system = platform.system().lower()
+
+Import("env")
+
+cppenv = env.Clone(tools = ['cpp'])
+
+cppenv.AppendUnique(CPPDEFINES = ['LIBSTATISKIT_PGM'])
+
+exclude = """
+""".split()
+
+sources = [source for source in cppenv.Glob('*.*') if not source.name in exclude]
+
+targets = cppenv.CppLibrary("statiskit_pgm", sources)
+Alias("cpp", targets)
+Alias("install", "cpp")

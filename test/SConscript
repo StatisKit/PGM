@@ -1,0 +1,17 @@
+# -*-python-*-
+
+Import("env")
+
+test_env = env.Clone(tools = ['nose'])
+
+sources = test_env.Glob('*.py')
+
+# Exclude here all Conda recipes that must not be built
+exclude = """
+""".split()
+
+sources = [source for source in sources if not source.name in exclude]
+
+targets = test_env.Nosetests(sources)
+test_env.Depends(targets, "py")
+Alias("test", targets)

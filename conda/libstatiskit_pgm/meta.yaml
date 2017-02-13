@@ -1,0 +1,22 @@
+package:
+    name: libstatiskit_pgm
+    version: "1.0.0"
+
+source:
+    path: ../..
+
+build:
+    number: 0
+    
+about:
+    home: http://statiskit-pgm.readthedocs.io/
+    license: CeCILL
+
+requirements:
+    build:
+        - libdev
+        - libboost
+        - libstatiskit_core
+    run:
+        - libboost
+        - libstatiskit_core

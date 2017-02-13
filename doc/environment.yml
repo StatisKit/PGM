@@ -1,0 +1,9 @@
+name: statiskit-pgm-doc
+channels:
+  - statiskit
+  - conda-forge
+dependencies:
+  - python
+  - python-doc
+  - libstatiskit_pgm
+  - python-statiskit_pgm

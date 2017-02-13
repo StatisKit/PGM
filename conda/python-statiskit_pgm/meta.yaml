@@ -1,0 +1,37 @@
+package:
+  name: python-statiskit_pgm
+  version: "1.0.0"
+
+source:
+  path: ../..
+
+build:
+  number: 0
+
+about:
+  home: http://statiskit-pgm.readthedocs.io
+  license: CeCILL
+
+requirements:
+  build:
+    - libdev
+    - python-dev
+    - libboost
+    - libstatiskit_pgm
+    - python
+  run:
+    - librun
+    - libboost
+    - python-statiskit_core
+    - libstatiskit_pgm
+    - python
+
+test:     
+  imports:
+    - statiskit.pgm.__pgm
+  # source_files:                                
+  # - test/test_*.py
+  # requires:
+  #   - python-dbg
+  # commands:                                       
+  #  - nosetests test -x -s -v

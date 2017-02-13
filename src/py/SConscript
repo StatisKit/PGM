@@ -1,0 +1,19 @@
+# # -*-python-*-
+
+Import("env")
+pyenv = env.Clone(tools = ['boost_python'])
+
+pyenv.AppendUnique(LIBS  = ['statiskit_pgm'])
+
+exclude = """
+""".split()
+
+sources = [source for source in pyenv.Glob('*.*') if source.name not in exclude]
+
+targets = pyenv.BoostPythonExtension("statiskit/pgm/__pgm", sources)
+Alias("py", targets)
+Alias("install", targets)
+
+targets = pyenv.PythonPackage('statiskit')
+Alias("py", targets)
+Alias("install", targets)
