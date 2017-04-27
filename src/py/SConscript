@@ -1,19 +1,30 @@
-# # -*-python-*-
+# -*-python-*-
 
-Import("env")
-pyenv = env.Clone(tools = ['boost_python'])
+from SCons.Errors import EnvironmentError
 
-pyenv.AppendUnique(LIBS  = ['statiskit_pgm'])
+try:
+    Import("env")
+    pyenv = env.Clone(tools = ['boost_python'])
 
-exclude = """
-""".split()
+    pyenv.AppendUnique(LIBS  = ['statiskit_pgm'])
 
-sources = [source for source in pyenv.Glob('*.*') if source.name not in exclude]
+    exclude = """
+    """.split()
 
-targets = pyenv.BoostPythonExtension("statiskit/pgm/__pgm", sources)
-Alias("py", targets)
-Alias("install", targets)
+    sources = [source for source in pyenv.Glob('*.*') if source.name not in exclude]
 
-targets = pyenv.PythonPackage('statiskit')
-Alias("py", targets)
-Alias("install", targets)
+    targets = pyenv.BoostPythonExtension("statiskit/pgm/__pgm", sources)
+    Alias("py", targets)
+    Alias("install", targets)
+    pyenv.Depends(targets, "cpp")
+    
+    targets = pyenv.PythonPackage('statiskit')
+    Alias("py", targets)
+    Alias("install", targets)
+    pyenv.Depends(targets, "cpp")
+except EnvironmentError:
+    Alias("py", [])
+    Alias("install", [])
+    pass
+except Exception:
+    raise
