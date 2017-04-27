@@ -1,5 +1,5 @@
-#ifndef STATISKIT_PGM_PGM_H
-#define STATISKIT_PGM_PGM_H
+#ifndef STATISKIT_PGM_BASE_H
+#define STATISKIT_PGM_BASE_H
 
 #if defined WIN32 || defined _WIN32 || defined __CYGWIN__
   #ifdef LIBSTATISKIT_PGM
@@ -23,7 +23,4 @@
   #endif
 #endif
 
-namespace statiskit
-{
-    
-}
+#endif
