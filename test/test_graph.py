@@ -19,15 +19,25 @@ class TestUndirectedGraph(unittest.TestCase):
                                                         [0.0, 0.0, 1.0, 0.0, 0.0],
                                                         [0.0, 0.0, 0.0, 0.0, 0.0]]))
 
-    def test_neigbours(self):
-        """Test undirected graph neighbours"""
-        self.assertTrue(self._graph.are_neighbours(0, 1))
-        self.assertFalse(self._graph.are_neighbours(0, 3))
+    def test_str(self):
+        """Test undirected graph string representation"""
+        self.assertEqual(str(self._graph), """[0.0, 1.0, 1.0, 0.0, 0.0]
+[1.0, 0.0, 1.0, 0.0, 0.0]
+[1.0, 1.0, 0.0, 1.0, 0.0]
+[0.0, 0.0, 1.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0]""")
+
+    def test_edge(self):
+        """Test undirected graph edge"""
+        self.assertTrue(self._graph.has_edge(0, 1))
+        self.assertFalse(self._graph.has_edge(0, 3))
 
     def test_degree(self):
         """Test undirected graph degrees"""
         self.assertEqual(self._graph.degree(0), 2)
+        self.assertEqual(self._graph.degree(0), len(self._graph.neighbours(0)))
         self.assertEqual(self._graph.degree(3), 1)
+        self.assertEqual(self._graph.degree(3), len(self._graph.neighbours(3)))
 
     def test_connected(self):
         """Test undirected graph connected"""
@@ -39,7 +49,54 @@ class TestUndirectedGraph(unittest.TestCase):
         self.assertTrue(self._graph.are_separated((0,1), (3,), (2,)))
         self.assertFalse(self._graph.are_separated((0,1), (2,), (3,)))
 
+    def test_chordality(self):
+        """Test undirected graph chordality"""
+        self.assertTrue(self._graph.is_chordal)
+        graph = pgm.UndirectedGraph(linalg.Matrix([[0.0, 1.0, 0.0, 1.0],
+                                                   [1.0, 0.0, 1.0, 0.0],
+                                                   [0.0, 1.0, 0.0, 1.0],
+                                                   [1.0, 0.0, 1.0, 0.0]]))
+        self.assertFalse(graph.is_chordal)
+
+    def test_junction_tree(self):
+        """Test undirected graph junction tree"""
+        graph = self._graph.junction_tree()
+        self.assertEqual(str(graph), """[0.0, 1.0, 0.0]
+[1.0, 0.0, 0.0]
+[0.0, 0.0, 0.0]""")
+        cliques = ["{0, 1, 2}", "{2, 3}", "{4}"]
+        for v in range(graph.nb_vertices):
+            self.assertEqual(str(graph.vertex_properties[v]), cliques[v])
+        self.assertEqual(str(graph.edge_properties[0, 1]), "{2}")
+
     @classmethod
     def tearDownClass(cls):
         """Test undirected graph deletion"""
+        del cls._graph
+
+@attr(linux=True,
+      osx=True,
+      win=True,
+      level=1)
+class TestUndirectedForest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """Test undirected forest construction"""
+        cls._graph = pgm.UndirectedForest(linalg.Matrix([[0.0, 2.0, 1.0, 0.0, 0.0],
+                                                         [2.0, 0.0, 3.0, 0.0, 0.0],
+                                                         [1.0, 3.0, 0.0, 4.0, 0.0],
+                                                         [0.0, 0.0, 4.0, 0.0, 0.0],
+                                                         [0.0, 0.0, 0.0, 0.0, 0.0]]))
+    def test_str(self):
+        """Test undirected forest string representation"""
+        self.assertEqual(self._graph.__str__(), """[0.0, 1.0, 0.0, 0.0, 0.0]
+[1.0, 0.0, 1.0, 0.0, 0.0]
+[0.0, 1.0, 0.0, 1.0, 0.0]
+[0.0, 0.0, 1.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0]""")
+
+    @classmethod
+    def tearDownClass(cls):
+        """Test undirected forest deletion"""
         del cls._graph
