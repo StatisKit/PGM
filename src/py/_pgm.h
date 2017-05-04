@@ -3,8 +3,8 @@
 
 #include <boost/python.hpp>
 #include <type_traits>
-#include <statiskit/pgm/base.h>
 #include <statiskit/pgm/graph.h>
+#include <statiskit/pgm/base.h>
 #include <statiskit/pgm/distribution.h>
 #include <memory>
 
@@ -18,6 +18,30 @@ namespace autowig
 
 /*namespace autowig
 {
+    class Wrap_1f859f9d3901599da851cd13463c8ad9 : public ::statiskit::MixtureUndirectedGraphDistribution::Computation, public boost::python::wrapper< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >
+    {
+        public:
+            
+            virtual class ::std::unique_ptr< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, struct ::std::default_delete< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > >  copy() const
+            {
+                 ::std::unique_ptr< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, struct ::std::default_delete< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > > ::element_type* result = this->get_override("copy")();
+                 return ::std::unique_ptr< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, struct ::std::default_delete< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > > (result);
+            }
+            virtual class ::std::vector< unsigned long int, class ::std::allocator< unsigned long int > >  assignment(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1) const
+            { return this->get_override("assignment")(param_0, param_1); }
+            virtual class ::std::vector< class ::Eigen::Matrix< double, -1, 1, 0, -1, 1 >, class ::std::allocator< class ::Eigen::Matrix< double, -1, 1, 0, -1, 1 > > >  posterior(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1, bool const & param_2) const
+            { return this->get_override("posterior")(param_0, param_1, param_2); }
+            virtual double  ldf(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1) const
+            { return this->get_override("ldf")(param_0, param_1); }
+
+        protected:
+            
+
+        private:
+            
+
+    };
+
     class Wrap_ba1d12947e8b51849790a5ffe68a94d2 : public ::statiskit::EdgePropertyGraph< class ::std::set< unsigned long int, ::std::less< unsigned long int >, class ::std::allocator< unsigned long int > > >, public boost::python::wrapper< class ::statiskit::EdgePropertyGraph< class ::std::set< unsigned long int, struct ::std::less< unsigned long int >, class ::std::allocator< unsigned long int > > > >
     {
         public:
@@ -104,6 +128,25 @@ namespace autowig
             }
             virtual double  ldf(class ::statiskit::UndirectedGraph const * param_0) const
             { return this->get_override("ldf")(param_0); }
+
+        protected:
+            
+
+        private:
+            
+
+    };
+
+    class Wrap_acd10274bef3532e8944df64bfea0a51 : public ::statiskit::PolymorphicCopy< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation, struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >, public boost::python::wrapper< struct ::statiskit::PolymorphicCopy< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation, struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > >
+    {
+        public:
+            
+            virtual class ::std::vector< unsigned long int, class ::std::allocator< unsigned long int > >  assignment(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1) const
+            { return this->get_override("assignment")(param_0, param_1); }
+            virtual class ::std::vector< class ::Eigen::Matrix< double, -1, 1, 0, -1, 1 >, class ::std::allocator< class ::Eigen::Matrix< double, -1, 1, 0, -1, 1 > > >  posterior(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1, bool const & param_2) const
+            { return this->get_override("posterior")(param_0, param_1, param_2); }
+            virtual double  ldf(class ::statiskit::MixtureUndirectedGraphDistribution const & param_0, class ::statiskit::UndirectedGraph const * param_1) const
+            { return this->get_override("ldf")(param_0, param_1); }
 
         protected:
             

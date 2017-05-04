@@ -44,6 +44,43 @@ namespace statiskit
     class STATISKIT_PGM_API MixtureUndirectedGraphDistribution : public PolymorphicCopy< UndirectedGraphDistribution, MixtureUndirectedGraphDistribution >
     {
         public:
+            struct Computation
+            {
+                virtual double ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const = 0;
+
+                virtual std::vector< Eigen::VectorXd > posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm=false) const = 0;
+
+                virtual std::vector< Index > assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const = 0;
+
+                virtual std::unique_ptr< Computation > copy() const = 0;
+            };
+
+            class VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization
+            {
+                public:
+                    VariationalComputation();
+                    VariationalComputation(const VariationalComputation& computation);
+                    virtual ~VariationalComputation();
+                    
+                    #if defined STATISKIT_PGM_HAS_OPENMP
+                    unsigned int get_nb_jobs() const;
+                    void set_nb_jobs(const unsigned int& nb_jobs);
+                    #endif
+
+                    virtual double ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const;
+
+                    virtual std::vector< Eigen::VectorXd > posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm=false) const;
+
+                    virtual std::vector< Index > assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const;
+
+                protected:
+                    #if defined STATISKIT_PGM_HAS_OPENMP
+                    unsigned int _nb_jobs;
+                    #endif
+
+                    inline double ldf(const std::vector< Eigen::VectorXd >& tau) const;
+            };
+
             MixtureUndirectedGraphDistribution(const Index& nb_vertices, const Index& nb_states);
             MixtureUndirectedGraphDistribution(const MixtureUndirectedGraphDistribution& distribution);
             virtual ~MixtureUndirectedGraphDistribution();
@@ -52,10 +89,13 @@ namespace statiskit
 
             virtual std::unique_ptr< UndirectedGraph > simulate() const;
 
+            Index get_nb_states() const;
+
+            const Computation* get_computation() const;
+            void set_computation(const Computation* computation);
+
             Index get_nb_vertices() const;
             void set_nb_vertices(const Index& nb_vertices);
-
-            Index get_nb_states() const;
 
             const Eigen::VectorXd& get_alpha() const;
             void set_alpha(const Eigen::VectorXd& alpha);
@@ -63,7 +103,15 @@ namespace statiskit
             const Eigen::MatrixXd& get_pi() const;
             void set_pi(const Eigen::MatrixXd& pi);
 
+            std::vector< Eigen::VectorXd > posterior(const UndirectedGraph* graph, const bool& logarithm=false) const;
+
+            std::vector< Index > assignment(const UndirectedGraph* graph) const;
+
+            // double uncertainty(const UndirectedGraph* graph, const Index& u) const;
+            // double uncertainty(const UndirectedGraph* graph) const;
+
         protected:
+            Computation* _computation;
             Index _nb_vertices;
             Eigen::VectorXd _alpha;
             Eigen::MatrixXd _pi;

@@ -19,19 +19,35 @@ del UndirectedGraph.get_nb_edges
 
 UndirectedGraph.is_chordal = property(UndirectedGraph.is_chordal)
 
-def adjacency(self):
-    return linalg.Matrix([[float(self.has_edge(u, v)) for v in range(self.nb_vertices)] for u in range(self.nb_vertices)])
+def adjacency(self, sort=None):
+    if sort is None:
+        vertices = range(self.nb_vertices)
+    elif isinstance(sort, list):
+        vertices = range(self.nb_vertices)
+        def sorter(vertex):
+            return sort[vertex]
+        vertices = sorted(vertices, key = sorter)
+    elif isinstance(sort, basestring):
+        if sort == 'mcs':
+            vertices = range(self.nb_vertices)
+            vertices = [vertices[vertex] for vertex in self.maximum_cardinality_search()]
+        else:
+            raise ValueError('\'sort\' parameter')
+    else:
+        raise TypeError('\'sort\' parameter')
+    return linalg.Matrix([[float(self.has_edge(u, v)) for v in vertices] for u in vertices])
 
-UndirectedGraph.adjacency = property(adjacency)
+UndirectedGraph.adjacency = adjacency
+del adjacency
 
 def __str__(self):
-    return self.adjacency.__str__()
+    return self.adjacency().__str__()
 
 UndirectedGraph.__str__ = __str__
 del __str__
 
 def __repr__(self):
-    return self.adjacency.__repr__()
+    return self.adjacency().__repr__()
 
 UndirectedGraph.__repr__ = __repr__
 del __repr__

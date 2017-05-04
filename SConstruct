@@ -8,29 +8,12 @@ env = Environment(tools = ['toolchain'])
 env.AppendUnique(LIBS=['statiskit_linalg',
                        'statiskit_core'])
 
-VariantDir('build', 'src')
-try:
-  SConscript(os.path.join('build', 'cpp', 'SConscript'), exports="env")
-except EnvironmentError:
-  pass
-except Exception:
-  raise
-try:
-  SConscript(os.path.join('build', 'py', 'SConscript'), exports="env")
-except EnvironmentError:
-  pass
-except Exception:
-  raise
-try:
-  SConscript(os.path.join('test', 'SConscript'), exports="env")
-except EnvironmentError:
-  pass
-except Exception:
-  raise
-try:
-  SConscript(os.path.join('conda', 'SConscript'), exports="env")
-except EnvironmentError:
-  pass
-except Exception:
-  raise
+VariantDir(os.path.join('build', 'src'), 'src')
+VariantDir(os.path.join('build', 'test'), 'test')
+
+SConscript(os.path.join('build', 'src', 'cpp', 'SConscript'), exports="env")
+SConscript(os.path.join('build', 'src', 'py', 'SConscript'), exports="env")
+SConscript(os.path.join('build', 'test', 'SConscript'), exports="env")
+SConscript(os.path.join('conda', 'SConscript'), exports="env")
+
 Default("install")
