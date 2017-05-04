@@ -44,7 +44,7 @@ namespace statiskit
     class STATISKIT_PGM_API MixtureUndirectedGraphDistribution : public PolymorphicCopy< UndirectedGraphDistribution, MixtureUndirectedGraphDistribution >
     {
         public:
-            struct Computation
+            struct STATISKIT_PGM_API Computation
             {
                 virtual double ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const = 0;
 
@@ -55,7 +55,7 @@ namespace statiskit
                 virtual std::unique_ptr< Computation > copy() const = 0;
             };
 
-            class VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization
+            class STATISKIT_PGM_API VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization
             {
                 public:
                     VariationalComputation();
