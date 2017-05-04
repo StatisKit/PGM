@@ -67,8 +67,140 @@ namespace statiskit
     void ErdosRenyiUndirectedGraphDistribution::set_pi(const double& pi)
     { _pi = pi; }
 
+    MixtureUndirectedGraphDistribution::VariationalComputation::VariationalComputation() : Optimization()
+    {
+        #if defined STATISKIT_PGM_HAS_OPENMP
+        _nb_jobs = omp_get_num_procs();
+        #endif
+    }
+
+    MixtureUndirectedGraphDistribution::VariationalComputation::VariationalComputation(const VariationalComputation& computation) : Optimization(computation)
+    {
+        #if defined STATISKIT_PGM_HAS_OPENMP
+        _nb_jobs = computation._nb_jobs;
+        #endif
+    }
+
+    MixtureUndirectedGraphDistribution::VariationalComputation::~VariationalComputation()
+    {}
+
+    #if defined STATISKIT_PGM_HAS_OPENMP
+    unsigned int MixtureUndirectedGraphDistribution::VariationalComputation::get_nb_jobs() const
+    { return _nb_jobs; }
+
+    void MixtureUndirectedGraphDistribution::VariationalComputation::set_nb_jobs(const unsigned int& nb_jobs)
+    { _nb_jobs = nb_jobs; }
+    #endif
+
+    double MixtureUndirectedGraphDistribution::VariationalComputation::ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const
+    { return ldf(posterior(mixture, graph, true)); }
+
+    std::vector< Eigen::VectorXd > MixtureUndirectedGraphDistribution::VariationalComputation::posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm) const
+    { 
+        Index nb_states = mixture.get_nb_states();
+        Eigen::VectorXd alpha = mixture._alpha;
+        std::vector< Eigen::VectorXd > tau(graph->get_nb_vertices(), alpha);
+        Eigen::MatrixXd p = mixture._pi, q = mixture._pi;
+        for(Index su = 0; su < nb_states; ++su)
+        { alpha[su] = log(alpha[su]); }
+        for(Index su = 0; su < nb_states; ++su)
+        {
+            for(Index sw = 0; sw < nb_states; ++sw)
+            {
+                p(su, sw) = log(p(su, sw));
+                q(su, sw) = log(1. - q(su, sw)); 
+            }
+        }
+        unsigned int its = 0;
+        double delta;
+        do
+        {
+            delta = 0;
+            for(Index u = 0, v = graph->get_nb_vertices(); u < v; ++u)
+            {
+                Eigen::VectorXd _tau = alpha;
+                for(Index su = 0; su < nb_states; ++su)
+                {
+                    for(Index w = 0; w < v; ++w)
+                    { 
+                        if(w != u)
+                        {
+                            bool edge = graph->has_edge(u, w);
+                            for(Index sw = 0; sw < nb_states; ++sw)
+                            {
+                                if(edge)
+                                { _tau[su] += tau[w][sw] * p(su, sw); }
+                                else
+                                { _tau[su] += tau[w][sw] * q(su, sw); }
+                            }
+                        }
+                    }
+                }
+                double max = _tau.maxCoeff(), sum = 0.;
+                for(Index index = 0, max_index = tau[u].size(); index < max_index; ++index)
+                {
+                    if(boost::math::isfinite(tau[u][index]))
+                    { _tau[index] = _tau[index] - max; }
+                    _tau[index] = exp(_tau[index]);
+                    sum += _tau[index];
+                }
+                _tau = _tau / sum;
+                delta += __impl::reldiff(tau[u], _tau);
+                tau[u] = _tau;
+            }
+            delta /= graph->get_nb_vertices();
+            ++its;
+        } while(run(its, delta));
+        if(logarithm)
+        {
+            for(Index u = 0, v = tau.size(); u < v; ++u)
+            {
+                for(Index index = 0, max_index = tau[u].size(); index < max_index; ++index)
+                { tau[u][index] = log(tau[u][index]); }
+            }
+        }
+        return tau;
+    }
+
+    std::vector< Index > MixtureUndirectedGraphDistribution::VariationalComputation::assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const
+    { 
+        std::vector< Eigen::VectorXd > tau = posterior(mixture, graph);
+        std::vector< Index > indices(tau.size());
+        Eigen::Index row;
+        for(Index u = 0, v = tau.size(); u < v; ++u)
+        {
+            tau[u].maxCoeff(&row);
+            { indices[u] = row; }
+        }
+        return indices;
+    }
+
+    double MixtureUndirectedGraphDistribution::VariationalComputation::ldf(const std::vector< Eigen::VectorXd >& tau) const
+    { 
+        double p = 0.;
+        for(Index u = 0, v = tau.size(); u < v; ++u)
+        {
+            for(Index w = 0; w < u; ++w)
+            {
+                for(Index su = 0; su < tau[u].size(); ++su)
+                {
+                    if(boost::math::isfinite(tau[u][su]))
+                    {
+                        for(Index sw = 0; sw < tau[w].size(); ++sw)
+                        {
+                            if(boost::math::isfinite(tau[w][sw]))
+                            { p += tau[u][su] + tau[w][sw]; }
+                        }
+                    }
+                }
+            }
+        }
+        return p;
+    }
+
     MixtureUndirectedGraphDistribution::MixtureUndirectedGraphDistribution(const Index& nb_vertices, const Index& nb_states)
     {
+        _computation = new VariationalComputation();
         _nb_vertices = nb_vertices;
         _alpha = Eigen::VectorXd::Ones(nb_states) / double(nb_states);
         _pi = 0.5 * Eigen::MatrixXd::Ones(nb_states, nb_states);
@@ -76,20 +208,33 @@ namespace statiskit
 
     MixtureUndirectedGraphDistribution::MixtureUndirectedGraphDistribution(const MixtureUndirectedGraphDistribution& distribution)
     {
+        if( distribution._computation)
+        { _computation = distribution._computation->copy().release(); }
+        else
+        { _computation = nullptr; }
         _nb_vertices = distribution._nb_vertices;
         _alpha = distribution._alpha;
         _pi = distribution._pi;
     }
 
     MixtureUndirectedGraphDistribution::~MixtureUndirectedGraphDistribution()
-    {}
+    {
+        if(_computation)
+        {
+            delete _computation;
+            _computation = nullptr;
+        }
+    }
 
     double MixtureUndirectedGraphDistribution::ldf(const UndirectedGraph* graph) const
     {
         double p;
         if(graph)
         {
-            p = 0.;
+            if(_computation)
+            { p = _computation->ldf(*this, graph); }
+            else
+            { throw member_error("_computation", "not given"); }
         }
         else
         { p = 0.; }
@@ -123,14 +268,24 @@ namespace statiskit
         return std::move(graph);
     }
 
+    Index MixtureUndirectedGraphDistribution::get_nb_states() const
+    { return _alpha.size(); }
+
+    const MixtureUndirectedGraphDistribution::Computation* MixtureUndirectedGraphDistribution::get_computation() const
+    { return _computation; }
+
+    void MixtureUndirectedGraphDistribution::set_computation(const Computation* computation)
+    {
+        delete _computation;
+        if(_computation)
+        { _computation = computation->copy().release(); }
+    }
+
     Index MixtureUndirectedGraphDistribution::get_nb_vertices() const
     { return _nb_vertices; }
 
     void MixtureUndirectedGraphDistribution::set_nb_vertices(const Index& nb_vertices)
     { _nb_vertices = nb_vertices; }
-
-    Index MixtureUndirectedGraphDistribution::get_nb_states() const
-    { return _alpha.size(); }
 
     const Eigen::VectorXd& MixtureUndirectedGraphDistribution::get_alpha() const
     { return _alpha; }
@@ -166,5 +321,25 @@ namespace statiskit
                 _pi(w, u) = _pi(u, w);
             }
         }
+    }
+
+    std::vector< Eigen::VectorXd > MixtureUndirectedGraphDistribution::posterior(const UndirectedGraph* graph, const bool& logarithm) const
+    { 
+        std::vector< Eigen::VectorXd > tau;
+        if(_computation)
+        { tau = _computation->posterior(*this, graph, logarithm); }
+        else
+        { throw member_error("_computation", "not given"); }
+        return tau;
+    }
+
+    std::vector< Index > MixtureUndirectedGraphDistribution::assignment(const UndirectedGraph* graph) const
+    { 
+        std::vector< Index > indices;
+        if(_computation)
+        { indices = _computation->assignment(*this, graph); }
+        else
+        { throw member_error("_computation", "not given"); }
+        return indices;
     }
 }
