@@ -19,7 +19,7 @@ del UndirectedGraph.get_nb_edges
 
 UndirectedGraph.is_chordal = property(UndirectedGraph.is_chordal)
 
-def adjacency(self, sort=None):
+def to_matrix(self, sort=None):
     if sort is None:
         vertices = range(self.nb_vertices)
     elif isinstance(sort, list):
@@ -37,17 +37,17 @@ def adjacency(self, sort=None):
         raise TypeError('\'sort\' parameter')
     return linalg.Matrix([[float(self.has_edge(u, v)) for v in vertices] for u in vertices])
 
-UndirectedGraph.adjacency = adjacency
-del adjacency
+UndirectedGraph.to_matrix = to_matrix
+del to_matrix
 
 def __str__(self):
-    return self.adjacency().__str__()
+    return self.to_matrix().__str__()
 
 UndirectedGraph.__str__ = __str__
 del __str__
 
 def __repr__(self):
-    return self.adjacency().__repr__()
+    return self.to_matrix().__repr__()
 
 UndirectedGraph.__repr__ = __repr__
 del __repr__
