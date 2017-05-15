@@ -1,3 +1,5 @@
+from tempfile import NamedTemporaryFile
+
 from statiskit import linalg
 from statiskit import pgm
 
@@ -68,6 +70,20 @@ class TestUndirectedGraph(unittest.TestCase):
         for v in range(graph.nb_vertices):
             self.assertEqual(str(graph.vertex_properties[v]), cliques[v])
         self.assertEqual(str(graph.edge_properties[0, 1]), "{2}")
+
+    def test_read_write_dot(self):
+        """Test undirected graph read & write methods with DOT format"""
+        filename = NamedTemporaryFile().name
+        self._graph.write_dot(filename)
+        graph = pgm.read_dot(filename)
+        self.assertEqual(str(graph), str(self._graph))
+
+    def test_read_write_gml(self):
+        """Test undirected graph read & write methods with GML format"""
+        filename = NamedTemporaryFile().name
+        self._graph.write_gml(filename)
+        graph = pgm.read_gml(filename)
+        self.assertEqual(str(graph), str(self._graph))
 
     @classmethod
     def tearDownClass(cls):
