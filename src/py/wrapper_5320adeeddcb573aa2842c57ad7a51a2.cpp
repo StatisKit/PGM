@@ -28,6 +28,7 @@ void wrapper_5320adeeddcb573aa2842c57ad7a51a2()
     boost::python::class_< class ::statiskit::UndirectedForest, autowig::Held< class ::statiskit::UndirectedForest >::Type, boost::python::bases< class ::statiskit::UndirectedGraph > > class_5320adeeddcb573aa2842c57ad7a51a2("UndirectedForest", "", boost::python::no_init);
     class_5320adeeddcb573aa2842c57ad7a51a2.def(boost::python::init< ::statiskit::Index const & >(""));
     class_5320adeeddcb573aa2842c57ad7a51a2.def(boost::python::init< class ::Eigen::Matrix< double, -1, -1, 0, -1, -1 > const & >(""));
+    class_5320adeeddcb573aa2842c57ad7a51a2.def(boost::python::init< class ::statiskit::UndirectedForest const & >(""));
 
     if(autowig::Held< class ::statiskit::UndirectedForest >::is_class)
     {

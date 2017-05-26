@@ -20,6 +20,9 @@ namespace statiskit
         }
     }
 
+    UndirectedGraph::UndirectedGraph(const UndirectedGraph& graph)
+    { _adjacency = graph._adjacency; }
+
     UndirectedGraph::~UndirectedGraph()
     {}
 
@@ -34,6 +37,9 @@ namespace statiskit
         nb_edges /= 2;
         return nb_edges;
     }
+
+    bool UndirectedGraph::has_edge(const Index& u, const Index& v) const
+    { return _adjacency[u].find(v) != _adjacency[u].end(); }
 
     void UndirectedGraph::add_edge(const Index& u, const Index& v)
     {
@@ -59,31 +65,11 @@ namespace statiskit
         { throw std::runtime_error("edge not present"); }
     }
 
-    bool UndirectedGraph::are_neighbours(const Index& u, const Index& v) const
-    { return _adjacency[u].find(v) != _adjacency[u].end(); }
-
     Index UndirectedGraph::degree(const Index& u) const
     { return _adjacency[u].size(); }
 
     const Neighbours& UndirectedGraph::neighbours(const Index& u) const
     { return _adjacency[u]; }
-
-    bool UndirectedGraph::is_clique(const Indices& u) const
-    {
-        bool clique = true;
-        Indices::const_iterator it_u = u.cbegin(), it_u_end = u.cend();
-        while(clique && it_u != it_u_end)
-        {
-            Indices::const_iterator it_v = u.cbegin();
-            while(clique && it_v != it_u)
-            {
-                clique = are_neighbours(*it_u, *it_v);
-                ++it_v;
-            }
-            ++it_u;
-        }
-        return clique;
-    }
 
     bool UndirectedGraph::are_connected(const Indices& u, const Indices& v) const
     { 
@@ -97,60 +83,91 @@ namespace statiskit
         return !are_connected(u, v, visited);
     }
 
-    // std::vector< Index > traversal(const traversal_type& algorithm) const
-    // {
-    //     std::vector< Index > vertices = std::vector< Index >();
-    //     Neighbours non_colored, colored;
-    //     switch(algorithm)
-    //     {
-    //         case DFS:
-    //             throw not_implemented_error("traversal");
-    //             break;
-    //         case BFS:
-    //             throw not_implemented_error("traversal");
-    //             break;
-    //         case MCS:
-    //             throw not_implemented_error("traversal");
-    //             break;
-    //     }
-    //     return vertices;
-    // }
-
+    std::vector< Index > UndirectedGraph::maximum_cardinality_search() const
+    {
+        std::vector< Index > rank(get_nb_vertices()), w(get_nb_vertices(), 1);
+        Neighbours non_colored;
+        for(Index u = 0, v = get_nb_vertices(); u < v; ++u)
+        { non_colored.insert(non_colored.end(), u); }
+        while(non_colored.size() > 0)
+        {
+            Index u = distance(w.begin(), std::max_element(w.begin(), w.end()));
+            rank[u] = non_colored.size() - 1;
+            for(Neighbours::const_iterator it = non_colored.begin(), it_end = non_colored.end(); it != it_end; ++it)
+            {
+                if(has_edge(u, *it))
+                { w[*it] += 1; }
+            }
+            w[u] = 0;
+            Neighbours::iterator it = non_colored.find(u);
+            non_colored.erase(it);
+        }
+        return rank;
+    }
 
     bool UndirectedGraph::is_chordal() const
     {
         bool chordal = true;
-        // Neighbours non_colored, colored;
-        // for(Index u = 0, v = get_nb_vertices(); u < v; ++u)
-        // { non_colored.insert(u); }
-        // while(non_colored.size() > 0)
-        // {
-        //     v = alphainv[i];
-        //     follower[v] = v;
-        //     index[v] = i;
-        //     vertices_type::const_iterator ite;
-        //     for(ite = cbegin(v); ite != cend(v); ++ite)
-        //     {
-        //         if(alpha[*ite] < i)
-        //         {
-        //             index[*ite] = i;
-        //             if(follower[*ite] == *ite)
-        //             { follower[*ite] = v; }
-        //         }
-        //     }
-        //     ite = cbegin(v);
-        //     while(ite != cend(v) && chordal)
-        //     {
-        //         if(alpha[*ite] < i && index[follower[*ite]] < i)
-        //         { chordal = false; }
-        //         ++ite;
-        //     }
-        //     ++i;
-        // }
-        throw not_implemented_error("is_chordal");
+        std::vector< Index > ordering = rank_to_ordering(maximum_cardinality_search());
+        ordering = std::vector< Index >(ordering.rbegin(), ordering.rend());
+        Neighbours colored;
+        Index u = 0, v = get_nb_vertices();
+        while(chordal && u < v)
+        {
+            Index w = ordering[u];
+            Neighbours ne = neighbours(w);
+            Neighbours::const_iterator it = colored.begin(), it_end = colored.end();
+            while(ne.size() > 0 && it != it_end)
+            {
+                Neighbours::iterator it_ne = ne.find(*it);
+                if(it_ne != ne.end())
+                { ne.erase(it_ne); }
+                ++it;
+            }
+            if(ne.size() > 1)
+            { chordal = is_clique(ne); }
+            colored.insert(w);
+            ++u;
+        }
         return chordal;
     }
 
+    PropertyGraph< UndirectedForest, Indices, Indices > UndirectedGraph::junction_tree() const
+    {
+        std::vector< Indices > cliques;
+        {
+            Indices r, p, x;
+            for(Index u = 0, v = get_nb_vertices(); u < v; ++u)
+            { p.insert(p.end(), u); }
+            bron_kerbosch(cliques, r, p, x);
+        }
+        Eigen::MatrixXd adjacency = Eigen::MatrixXd::Zero(cliques.size(), cliques.size());
+        std::vector< std::vector< Indices > > intersections(cliques.size() - 1);
+        for(Index u = 1, v = cliques.size(); u < v; ++u)
+        {
+            intersections[u - 1] = std::vector< Indices >(u, Indices());
+            for(Index w = 0; w < u; ++w)
+            {
+                std::set_intersection(cliques[w].begin(), cliques[w].end(), cliques[u].cbegin(), cliques[v].cend(), std::inserter(intersections[u - 1][w], intersections[u - 1][w].begin()));
+                adjacency(w, u) = intersections[u - 1][w].size();
+            }
+        }
+        PropertyGraph< UndirectedForest, Indices, Indices > junction_tree = PropertyGraph< UndirectedForest, Indices, Indices >(adjacency);
+        junction_tree.set_vertex_property(0, cliques[0]);
+        for(Index u = 1, v = cliques.size(); u < v; ++u)
+        {
+            const Neighbours& ne = junction_tree.neighbours(u);
+            junction_tree.set_vertex_property(u, cliques[u]);
+            Neighbours::const_iterator it = ne.cbegin(), it_end = ne.cend();
+            while(it != it_end && *it < u)
+            {
+                junction_tree.set_edge_property(*it, u, intersections[u - 1][*it]);
+                ++it;
+            }
+        }
+        return junction_tree;
+    }
+    
     bool UndirectedGraph::are_connected(const Indices& u, const Indices& v, Neighbours& visited) const
     {
         Indices w = Indices();
@@ -180,6 +197,41 @@ namespace statiskit
         return connected;
     }
 
+    std::vector< Index > UndirectedGraph::rank_to_ordering(const std::vector< Index >& rank)
+    {
+        std::vector< Index > ordering(rank.size());
+        for(Index u = 0, v = ordering.size(); u < v; ++u)
+        { ordering[rank[u]] = u;  }
+        return ordering;
+    }
+
+    std::vector< Index > UndirectedGraph::ordering_to_rank(const std::vector< Index >& ordering)
+    { return rank_to_ordering(ordering); }
+
+    void UndirectedGraph::bron_kerbosch(std::vector< Indices >& cliques, const Indices& r, Indices p, Indices x) const
+    {
+        if(p.size() == 0 && x.size() == 0)
+        { cliques.push_back(r); }
+        else
+        {
+            Indices rn, pn, xn;
+            while(p.size() > 0)
+            {
+                Indices::const_iterator itv = p.begin();
+                rn = r;
+                rn.insert(*itv);
+                pn.clear();
+                Indices ne = Indices(_adjacency[*itv].cbegin(), _adjacency[*itv].cend());
+                std::set_intersection(p.begin(), p.end(), ne.cbegin(), ne.cend(), std::inserter(pn, pn.begin()));
+                xn.clear();
+                std::set_intersection(x.begin(), x.end(), ne.cbegin(), ne.cend(), std::inserter(xn, xn.begin()));
+                bron_kerbosch(cliques, rn, pn, xn);
+                x.insert(*itv);
+                p.erase(itv);
+            }
+        }
+    }
+
     UndirectedForest::UndirectedForest(const Index& vertices) : UndirectedGraph(vertices)
     {}
 
@@ -190,17 +242,24 @@ namespace statiskit
         while(nb_edges < max_nb_edges)
         {
             Eigen::MatrixXd::Index row, col;
-            double min = scores.minCoeff(&row, &col);
-            try
+            double max = scores.maxCoeff(&row, &col);
+            if(max > 0.0)
             {
-                add_edge(row, col);
-                ++nb_edges;
-                scores(row, col) = std::numeric_limits< double >::infinity();
-            }
-            catch(const std::exception& e)
-            {}
+                try
+                {
+                    add_edge(row, col);
+                    ++nb_edges;
+                }
+                catch(const std::exception& e) {}
+                scores(row, col) = -1.0;
+           }
+           else
+           { ++nb_edges; }
         }
     }
+
+    UndirectedForest::UndirectedForest(const UndirectedForest& graph) : UndirectedGraph(graph)
+    {}
 
     UndirectedForest::~UndirectedForest()
     {}
@@ -215,9 +274,6 @@ namespace statiskit
         else
         { throw std::runtime_error("already connected"); }
     }
-
-    bool UndirectedForest::is_clique(const Indices& u) const
-    { return u.size() == 2 && are_neighbours(*(u.cbegin()), *(u.crbegin())); }
 
     bool UndirectedForest::is_chordal() const
     { return true; }
