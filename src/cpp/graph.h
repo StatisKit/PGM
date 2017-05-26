@@ -10,6 +10,17 @@ namespace statiskit
 {
     typedef std::unordered_set< Index > Neighbours;
 
+    template<class V, class E> class VertexEdgePropertyGraph
+    {
+        public:
+            PropertyGraph(const Index& vertices);
+            PropertyGraph(const Eigen::MatrixXd& adjacency);
+            PropertyGraph(const PropertyGraph< V, E >);
+            virtual ~PropertyGraph();
+
+        protected:
+    }
+
     class STATISKIT_PGM_API UndirectedGraph 
     {
         public:
