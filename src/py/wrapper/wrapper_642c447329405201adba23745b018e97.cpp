@@ -5,7 +5,7 @@
 namespace autowig
 {
 
-    void method_decorator_ff6cd4307b865b7fa234eab484038545(class ::std::unique_ptr< class ::statiskit::UndirectedGraph, struct ::std::default_delete< class ::statiskit::UndirectedGraph > > const & instance, class ::statiskit::UndirectedGraph & param_out)     { instance.operator*() = param_out; }
+    void method_decorator_ff6cd4307b865b7fa234eab484038545(class ::std::unique_ptr< class ::statiskit::UndirectedGraph, struct ::std::default_delete< class ::statiskit::UndirectedGraph > > const & instance, const class ::statiskit::UndirectedGraph & param_out) { instance.operator*() = param_out; }
 }
 
 #if defined(_MSC_VER)

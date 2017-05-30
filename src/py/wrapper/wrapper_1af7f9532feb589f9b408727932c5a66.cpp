@@ -40,7 +40,6 @@ void wrapper_1af7f9532feb589f9b408727932c5a66()
     if(autowig::Held< class ::statiskit::ErdosRenyiUndirectedGraphDistribution >::is_class)
     {
         boost::python::implicitly_convertible< autowig::Held< class ::statiskit::ErdosRenyiUndirectedGraphDistribution >::Type, autowig::Held< struct ::statiskit::PolymorphicCopy< struct ::statiskit::UndirectedGraphDistribution, class ::statiskit::ErdosRenyiUndirectedGraphDistribution, struct ::statiskit::UndirectedGraphDistribution > >::Type >();
-        //boost::python::objects::class_value_wrapper< autowig::Held< class ::statiskit::ErdosRenyiUndirectedGraphDistribution >::Type, boost::python::objects::make_ptr_instance< class ::statiskit::ErdosRenyiUndirectedGraphDistribution, boost::python::objects::pointer_holder< autowig::Held< class ::statiskit::ErdosRenyiUndirectedGraphDistribution >::Type, class ::statiskit::ErdosRenyiUndirectedGraphDistribution > > >();
     }
 
 }
