@@ -12,9 +12,9 @@ try:
     exclude = """
     """.split()
 
-    sources = [source for source in cppenv.Glob('*.*') if not source.name in exclude]
-
-    targets = cppenv.CppLibrary("statiskit_pgm", sources)
+    sources = [source for source in cppenv.Glob('*.h*') if not source.name in exclude]
+    targets = cppenv.CppDev("statiskit_pgm", sources)
+    Alias("cpp-dev", targets)
     Alias("cpp", targets)
     Alias("autowig", targets)
     Alias("install", targets)
@@ -22,18 +22,27 @@ try:
         wigenv = cppenv.Clone(tools = ['wig'])
 
         targets = wigenv.BoostPythonWIG('statiskit_pgm', [target for target in targets if target.name.endswith('.h')],
-                                        module='../py/_pgm.cpp',
+                                        module='../py/wrapper/_pgm.cpp',
                                         decorator='../py/statiskit/pgm/_pgm.py',
                                         parser_bootstrap=1,
                                         controller='AutoWIG.py',
                                         depends=['statiskit_linalg', 'statiskit_stl', 'statiskit_core'])
         Alias("autowig", targets)
-        wigenv.Depends(targets, "cpp")
+        wigenv.Depends(targets, "cpp-dev")
     except EnvironmentError:
         Alias("autowig", [])
         pass
     except Exception:
         raise
+
+    exclude = """
+    """.split()
+
+    sources = [source for source in cppenv.Glob('*.cpp') if not source.name in exclude]
+    targets = cppenv.CppLib("statiskit_pgm", sources)
+    Alias("cpp-lib", targets)
+    Alias("cpp", targets)
+    Alias("install", targets)
 except EnvironmentError:
     Alias("cpp", [])
     Alias("autowig", [])

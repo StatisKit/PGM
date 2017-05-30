@@ -70,8 +70,6 @@ void wrapper_1f859f9d3901599da851cd13463c8ad9()
     {
         boost::python::implicitly_convertible< autowig::Held< autowig::Wrap_1f859f9d3901599da851cd13463c8ad9 >::Type, autowig::Held< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >::Type >();
         boost::python::register_ptr_to_python< autowig::Held< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >::Type >();
-        //boost::python::objects::class_value_wrapper< autowig::Held< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >::Type, boost::python::objects::make_ptr_instance< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, boost::python::objects::pointer_holder< autowig::Held< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >::Type, struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > > >();
-        //boost::python::implicitly_convertible< autowig::Held< autowig::Wrap_1f859f9d3901599da851cd13463c8ad9 >::Type, autowig::Held< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation >::Type >();
     }    
 
 }

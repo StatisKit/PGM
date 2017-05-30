@@ -37,7 +37,6 @@ void wrapper_79aeba92266e5bbaa0013f6579357017()
     {
         boost::python::implicitly_convertible< autowig::Held< class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation >::Type, autowig::Held< struct ::statiskit::PolymorphicCopy< struct ::statiskit::MixtureUndirectedGraphDistribution::Computation, class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation, struct ::statiskit::MixtureUndirectedGraphDistribution::Computation > >::Type >();
         boost::python::implicitly_convertible< autowig::Held< class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation >::Type, autowig::Held< class ::statiskit::Optimization >::Type >();
-        //boost::python::objects::class_value_wrapper< autowig::Held< class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation >::Type, boost::python::objects::make_ptr_instance< class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation, boost::python::objects::pointer_holder< autowig::Held< class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation >::Type, class ::statiskit::MixtureUndirectedGraphDistribution::VariationalComputation > > >();
     }
 
 }

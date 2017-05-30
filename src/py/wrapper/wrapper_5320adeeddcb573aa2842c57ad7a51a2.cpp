@@ -33,7 +33,6 @@ void wrapper_5320adeeddcb573aa2842c57ad7a51a2()
     if(autowig::Held< class ::statiskit::UndirectedForest >::is_class)
     {
         boost::python::implicitly_convertible< autowig::Held< class ::statiskit::UndirectedForest >::Type, autowig::Held< class ::statiskit::UndirectedGraph >::Type >();
-        //boost::python::objects::class_value_wrapper< autowig::Held< class ::statiskit::UndirectedForest >::Type, boost::python::objects::make_ptr_instance< class ::statiskit::UndirectedForest, boost::python::objects::pointer_holder< autowig::Held< class ::statiskit::UndirectedForest >::Type, class ::statiskit::UndirectedForest > > >();
     }
 
 }

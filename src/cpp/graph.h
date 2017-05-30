@@ -1,6 +1,7 @@
 #ifndef STATISKIT_PGM_GRAPH_H
 #define STATISKIT_PGM_GRAPH_H
 
+#include <statiskit/linalg/Eigen.h>
 #include <statiskit/core/base.h>
 #include <unordered_set>
 #include <unordered_map>
