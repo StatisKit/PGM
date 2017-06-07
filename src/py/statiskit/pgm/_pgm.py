@@ -1,22 +1,29 @@
 __all__ = []
 
 # Import dependency decorator modules
-import statiskit.stl._stl
 import statiskit.linalg._linalg
+import statiskit.stl._stl
 import statiskit.core._core
 
 # Import Boost.Python module
 import __pgm
 
 # Resolve scopes
-__pgm.statiskit.MixtureUndirectedGraphDistribution.Computation = __pgm.statiskit._mixture_undirected_graph_distribution.Computation
-__pgm.statiskit.MixtureUndirectedGraphDistribution.VariationalComputation = __pgm.statiskit._mixture_undirected_graph_distribution.VariationalComputation
+__pgm.statiskit._OptimizationEstimationImpl_edc12715bbd0502cb4dd6c5388cbb967.Estimator = __pgm.statiskit.__optimization_estimation_impl_edc12715bbd0502cb4dd6c5388cbb967.Estimator
+__pgm.statiskit._OptimizationEstimation_3904034af6025a76b81ffce10e208079.Estimator = __pgm.statiskit.__optimization_estimation_3904034af6025a76b81ffce10e208079.Estimator
+__pgm.statiskit.pgm.MixtureUndirectedGraphProcess.Computation = __pgm.statiskit.pgm._mixture_undirected_graph_process.Computation
+__pgm.statiskit.pgm.MixtureUndirectedGraphProcess.VariationalComputation = __pgm.statiskit.pgm._mixture_undirected_graph_process.VariationalComputation
+__pgm.statiskit.pgm.GraphicalGaussianDistributionMLEstimation.Estimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_ml_estimation.Estimator
+__pgm.statiskit.pgm.GraphicalGaussianDistributionNREstimation.Estimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_nr_estimation.Estimator
 
 # Group template specializations
-__pgm.statiskit._EdgePropertyGraph = (__pgm.statiskit._EdgePropertyGraph_ba1d12947e8b51849790a5ffe68a94d2)
-__pgm.statiskit._PolymorphicCopy = (__pgm.statiskit._PolymorphicCopy_4db0ff3e7f0a577296e63ea447c1b952, __pgm.statiskit._PolymorphicCopy_a171fcfcd46759fc9450f58d5118f67d, __pgm.statiskit._PolymorphicCopy_acd10274bef3532e8944df64bfea0a51)
-__pgm.statiskit._PropertyGraph = (__pgm.statiskit._PropertyGraph_e3ab7b3cfda55b9f9e870d32bf461587)
-__pgm.statiskit._VertexPropertyGraph = (__pgm.statiskit._VertexPropertyGraph_eb75867a4c1d5be4aca09cab824ff383)
+__pgm.statiskit._LazyEstimation = (__pgm.statiskit._LazyEstimation_53187b7919eb50ee8798d33c37718ba9, __pgm.statiskit._LazyEstimation_77bd6af9231c549291f1ae7884d83aa9)
+__pgm.statiskit._ActiveEstimation = (__pgm.statiskit._ActiveEstimation_6dcd105f87f3599a9a382af799035647, __pgm.statiskit._ActiveEstimation_cc9947bd715555bbb7af0e1fb5fc56f6)
+__pgm.statiskit._OptimizationEstimationImpl = (__pgm.statiskit._OptimizationEstimationImpl_edc12715bbd0502cb4dd6c5388cbb967)
+__pgm.std._Vector = (__pgm.std._Vector_58063898f8e0510f98fc387ce09f4ed6)
+__pgm.statiskit._PolymorphicCopy = (__pgm.statiskit._PolymorphicCopy_2adb3c996533527c9ad5b76c754ab21d, __pgm.statiskit._PolymorphicCopy_5085567941255a1eb4c2cc3eadaed71e, __pgm.statiskit._PolymorphicCopy_c1957d0159c2540ca35655439f050e33, __pgm.statiskit._PolymorphicCopy_7763bf5ebeaf57269ca0e3cb7579bfc1)
+__pgm.statiskit._OptimizationEstimation = (__pgm.statiskit._OptimizationEstimation_3904034af6025a76b81ffce10e208079)
 
 # Define aliases
-__pgm.statiskit.Neighbours = statiskit.stl.__stl.std._UnorderedSet_d48105936d4f5d09a78d2aa9f878fdb8
+__pgm.statiskit.pgm.Neighbours = statiskit.stl.__stl.std._UnorderedSet_d48105936d4f5d09a78d2aa9f878fdb8
+__pgm.std._Vector_58063898f8e0510f98fc387ce09f4ed6.ValueType = statiskit.stl.__stl.std._Set_476c1c1f206251dba7af53c48f3f6e42

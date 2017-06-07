@@ -2,7 +2,6 @@
 #define STATISKIT_PGM_GRAPH_H
 
 #include <statiskit/linalg/Eigen.h>
-#include <statiskit/core/base.h>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -10,124 +9,136 @@
 
 namespace statiskit
 {
-    typedef std::unordered_set< Index > Neighbours;
-
-    template<class V> class VertexPropertyGraph
+    namespace pgm
     {
-        public:
-            VertexPropertyGraph();
-            VertexPropertyGraph(const VertexPropertyGraph< V >& graph);
-            virtual ~VertexPropertyGraph();
+        typedef std::unordered_set< Index > Neighbours;
 
-            const V& get_vertex_property(const Index& u) const;
-            virtual void set_vertex_property(const Index& u, const V& property);
+        template<class V> class VertexPropertyGraph
+        {
+            public:
+                VertexPropertyGraph();
+                VertexPropertyGraph(const VertexPropertyGraph< V >& graph);
+                virtual ~VertexPropertyGraph();
 
-        protected:
-            std::unordered_map< Index, V > _vertices;
+                const V& get_vertex_property(const Index& u) const;
+                virtual void set_vertex_property(const Index& u, const V& property);
 
-            virtual bool valid_vertex_property(const Index& u) const = 0;
-    };
+            protected:                
+                std::unordered_map< Index, V > _vertices;
 
-    template<class E> class EdgePropertyGraph
-    {
-        public:
-            EdgePropertyGraph();
-            EdgePropertyGraph(const EdgePropertyGraph< E >& graph);
-            virtual ~EdgePropertyGraph();
+                virtual bool valid_vertex_property(const Index& u) const = 0;
+        };
 
-            const E& get_edge_property(const Index& u, const Index& v) const;
-            void set_edge_property(const Index& u, const Index& v, const E& property);
+        template<class E> class EdgePropertyGraph
+        {
+            public:
+                EdgePropertyGraph();
+                EdgePropertyGraph(const EdgePropertyGraph< E >& graph);
+                virtual ~EdgePropertyGraph();
 
-        protected:
-            std::unordered_map< Index, std::unordered_map< Index, E > > _edges;
+                const E& get_edge_property(const Index& u, const Index& v) const;
+                void set_edge_property(const Index& u, const Index& v, const E& property);
 
-            virtual bool valid_edge_property(const Index& u, const Index& v) const = 0;
-    };
+            protected:
+                std::unordered_map< Index, std::unordered_map< Index, E > > _edges;
 
-    template<class G, class V, class E> class PropertyGraph : public VertexPropertyGraph< V >, public EdgePropertyGraph< V >, public G
-    {
-        public:
-            PropertyGraph(const Index& vertices);
-            PropertyGraph(const Eigen::MatrixXd& adjacency);
-            PropertyGraph(const PropertyGraph< G, V, E >& graph);
-            virtual ~PropertyGraph();
+                virtual bool valid_edge_property(const Index& u, const Index& v) const = 0;
+        };
 
-        protected:
-            virtual bool valid_vertex_property(const Index& u) const;
-            virtual bool valid_edge_property(const Index& u, const Index& v) const;
-    };
+        template<class G, class V, class E> class PropertyGraph : public VertexPropertyGraph< V >, public EdgePropertyGraph< V >, public G
+        {
+            public:
+                PropertyGraph(const Index& vertices);
+                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const PropertyGraph< G, V, E >& graph);
+                virtual ~PropertyGraph();
 
-    template<class G, class V> class PropertyGraph< G, V, void > : public VertexPropertyGraph< V >, public G
-    {
-        public:
-            PropertyGraph(const Index& vertices);
-            PropertyGraph(const Eigen::MatrixXd& adjacency);
-            PropertyGraph(const PropertyGraph< G, V, void >& graph);
-            virtual ~PropertyGraph();
+            protected:
 
-        protected:
-            virtual bool valid_vertex_property(const Index& u) const;
-    };
+                virtual bool valid_vertex_property(const Index& u) const;
+                virtual bool valid_edge_property(const Index& u, const Index& v) const;
+        };
 
-    template<class G, class E> class PropertyGraph< G, void, E > : public EdgePropertyGraph< E >, public G
-    {
-        public:
-            PropertyGraph(const Index& vertices);
-            PropertyGraph(const Eigen::MatrixXd& adjacency);
-            PropertyGraph(const PropertyGraph< G, void, E >& graph);
-            virtual ~PropertyGraph();
+        template<class G, class V> class PropertyGraph< G, V, void > : public VertexPropertyGraph< V >, public G
+        {
+            public:
+                PropertyGraph(const Index& vertices);
+                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const PropertyGraph< G, V, void >& graph);
+                virtual ~PropertyGraph();
 
-        protected:
-            virtual bool valid_edge_property(const Index& u, const Index& v) const;
-    };
+            protected:
 
-    class UndirectedForest;
+                virtual bool valid_vertex_property(const Index& u) const;
+        };
 
-    class STATISKIT_PGM_API UndirectedGraph 
-    {
-        public:
-            UndirectedGraph(const Index& vertices);
-            UndirectedGraph(const Eigen::MatrixXd& adjacency);
-            UndirectedGraph(const UndirectedGraph& graph);
-            virtual ~UndirectedGraph();
+        template<class G, class E> class PropertyGraph< G, void, E > : public EdgePropertyGraph< E >, public G
+        {
+            public:
+                PropertyGraph(const Index& vertices);
+                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const PropertyGraph< G, void, E >& graph);
+                virtual ~PropertyGraph();
 
-            Index get_nb_vertices() const;
+            protected:
 
-            Index get_nb_edges() const;
+                virtual bool valid_edge_property(const Index& u, const Index& v) const;
+        };
 
-            bool has_edge(const Index& u, const Index& v) const;
-            virtual void add_edge(const Index& u, const Index& v);
-            void remove_edge(const Index& u, const Index& v);
+        class UndirectedForest;
 
-            Index degree(const Index& vertex) const;
+        class STATISKIT_PGM_API UndirectedGraph 
+        {
+            public:
+                UndirectedGraph(const Index& vertices);
+                UndirectedGraph(const Eigen::MatrixXd& adjacency);
+                UndirectedGraph(const UndirectedGraph& graph);
+                virtual ~UndirectedGraph();
 
-            const Neighbours& neighbours(const Index& u) const;
+                Index get_nb_vertices() const;
 
-            bool are_connected(const Indices& u, const Indices& v) const;
-            bool are_separated(const Indices& u, const Indices& v, const Indices& w) const;
+                Index get_nb_edges() const;
 
-            std::vector< Index > maximum_cardinality_search() const;
+                bool has_edge(const Index& u, const Index& v) const;
+                virtual void add_edge(const Index& u, const Index& v);
+                void remove_edge(const Index& u, const Index& v);
 
-            virtual bool is_chordal() const;
+                Index degree(const Index& vertex) const;
 
-            PropertyGraph< UndirectedForest, Indices, Indices > junction_tree() const;
+                const Neighbours& neighbours(const Index& u) const;
 
-        protected:
-            std::vector< Neighbours > _adjacency;
+                bool are_connected(const Index& u, const Index& v) const;
+                bool are_connected(const Indices& u, const Indices& v) const;
 
-            bool are_connected(const Indices& u, const Indices& v, Neighbours& visited) const;
+                bool are_separated(const Index& u, const Index& v, const Indices& w) const;
+                bool are_separated(const Indices& u, const Indices& v, const Indices& w) const;
 
-            inline static std::vector< Index > rank_to_ordering(const std::vector< Index >& rank);
-            inline static std::vector< Index > ordering_to_rank(const std::vector< Index >& ordering);
+                std::vector< Index > maximum_cardinality_search() const;
 
-            template<class S> bool is_clique(const S& u) const;
+                std::unique_ptr< UndirectedGraph > maximum_cardinality_embedding(const bool& elimination=false) const;
 
-            void bron_kerbosch(std::vector< Indices >& cliques, const Indices& r, Indices p, Indices x) const;
-    };
+                std::vector< Index > depth_first_search() const;
 
-    class STATISKIT_PGM_API UndirectedForest : public UndirectedGraph
-    {
-        public:
+                virtual bool is_chordal() const;
+
+                std::vector< Indices > bron_kerbosch() const;
+
+                virtual std::unique_ptr< UndirectedGraph > copy() const;
+
+            protected:
+                std::vector< Neighbours > _adjacency;
+
+                bool are_connected(const Indices& u, const Indices& v, Neighbours& visited) const;
+
+                template<class S> bool is_clique(const S& u) const;
+
+                void bron_kerbosch(std::vector< Indices >& cliques, const Indices& r, Indices p, Indices x) const;
+
+                inline std::unique_ptr< UndirectedGraph > elimination_game(const std::vector< Index >& ordering) const;
+        };
+
+        struct STATISKIT_PGM_API UndirectedForest : UndirectedGraph
+        {
             UndirectedForest(const Index& vertices);
             UndirectedForest(const Eigen::MatrixXd& adjacency);
             UndirectedForest(const UndirectedForest& graph);
@@ -136,7 +147,29 @@ namespace statiskit
             virtual void add_edge(const Index& u, const Index& v);
 
             virtual bool is_chordal() const;
-    };
+
+            virtual std::unique_ptr< UndirectedGraph > copy() const;
+        };
+
+        class STATISKIT_PGM_API CliqueTree 
+        {
+            public:
+                CliqueTree(const UndirectedGraph& graph);
+                CliqueTree(const CliqueTree& tree);
+                virtual ~CliqueTree();
+
+                Index get_nb_cliques() const;
+
+                const Indices& get_clique(const Index& v) const;
+
+                const Indices& get_separator(const Index& v) const;
+
+            protected:
+                std::vector< Indices > _cliques;
+                std::vector< Indices > _separators;
+
+        };
+    }
 }
 
 #include "graph.hpp"

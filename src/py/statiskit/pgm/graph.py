@@ -1,10 +1,10 @@
 from functools import wraps
+import itertools
 
 import _pgm
-from __pgm.statiskit import (_VertexPropertyGraph,
-                             _EdgePropertyGraph,
-                             UndirectedGraph,
-                                UndirectedForest)
+from __pgm.statiskit.pgm import (UndirectedGraph,
+                                     UndirectedForest,
+                                 CliqueTree)
 
 from statiskit import linalg
 
@@ -52,6 +52,47 @@ def __repr__(self):
 UndirectedGraph.__repr__ = __repr__
 del __repr__
 
+def clique_tree(self):
+    return CliqueTree(self)
+
+UndirectedGraph.clique_tree = clique_tree
+del clique_tree
+
+CliqueTree.nb_cliques = property(CliqueTree.get_nb_cliques)
+del CliqueTree.get_nb_cliques
+
+class Proxy(object):
+
+    def __init__(self, graph):
+        self._graph = graph
+
+    def __len__(self):
+        return self._graph.nb_cliques
+
+class Cliques(Proxy):
+    pass 
+
+class Separators(Proxy):
+    pass
+
+def wrapper_getitem(f):
+    @wraps(f)
+    def __getitem__(self, index):
+        if index < 0:
+            index += len(self)
+        if not 0 <= index < len(self):
+            raise IndexError()
+        return f(self._graph, index)
+    return __getitem__
+
+Cliques.__getitem__ = wrapper_getitem(CliqueTree.get_clique)
+del CliqueTree.get_clique
+CliqueTree.cliques = property(Cliques)
+Separators.__getitem__ = wrapper_getitem(CliqueTree.get_separator)
+del CliqueTree.get_separator
+CliqueTree.separators = property(Separators)
+del wrapper_getitem
+
 def vertex_property_graph_decorator(cls):
 
     class VertexProperties(object):
@@ -79,8 +120,8 @@ def vertex_property_graph_decorator(cls):
 
     cls.vertex_properties = property(VertexProperties)
 
-for cls in (_VertexPropertyGraph,):
-    vertex_property_graph_decorator(cls)
+# for cls in (_VertexPropertyGraph,):
+#     vertex_property_graph_decorator(cls)
 
 def edge_property_graph_decorator(cls):
 
@@ -109,5 +150,5 @@ def edge_property_graph_decorator(cls):
 
     cls.edge_properties = property(EdgeProperties)
 
-for cls in (_EdgePropertyGraph,):
-    edge_property_graph_decorator(cls)
+# for cls in (_EdgePropertyGraph,):
+#     edge_property_graph_decorator(cls)

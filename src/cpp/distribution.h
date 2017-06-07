@@ -2,120 +2,97 @@
 #define STATISKIT_PGM_DISTRIBUTION_H
 
 #include <boost/random/uniform_01.hpp>
+#include <statiskit/core/distribution.h>
+#include <statiskit/core/estimation.h>
+#include <statiskit/core/moment.h>
 
 #include "graph.h"
 
 namespace statiskit
 {
-    struct STATISKIT_PGM_API UndirectedGraphDistribution
+    namespace pgm
     {
-        virtual ~UndirectedGraphDistribution() = 0;
+        class STATISKIT_PGM_API GraphicalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, GraphicalGaussianDistribution, ContinuousMultivariateDistribution >
+        {
+            public:
+                GraphicalGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& sigma);
+                GraphicalGaussianDistribution(const GraphicalGaussianDistribution& gaussian);
+                virtual ~GraphicalGaussianDistribution();
 
-        virtual double ldf(const UndirectedGraph* graph) const = 0;
-        virtual double pdf(const UndirectedGraph* graph) const;
+                virtual Index get_nb_components() const;
 
-        virtual std::unique_ptr< UndirectedGraph > simulate() const = 0;
+                virtual unsigned int get_nb_parameters() const;
 
-        virtual std::unique_ptr< UndirectedGraphDistribution > copy() const = 0;
-    };
+                virtual double probability(const MultivariateEvent* event, const bool& logarithm) const;
 
-    class STATISKIT_PGM_API ErdosRenyiUndirectedGraphDistribution : public PolymorphicCopy< UndirectedGraphDistribution, ErdosRenyiUndirectedGraphDistribution >
-    {
-        public:
-            ErdosRenyiUndirectedGraphDistribution(const Index& nb_vertices, const double& pi=0.5);
-            ErdosRenyiUndirectedGraphDistribution(const ErdosRenyiUndirectedGraphDistribution& distribution);
-            virtual ~ErdosRenyiUndirectedGraphDistribution();
+                std::unique_ptr< MultivariateEvent > simulate() const;
 
-            virtual double ldf(const UndirectedGraph* graph) const;
+                const Eigen::VectorXd& get_mu() const;
+                void set_mu(const Eigen::VectorXd& mu);
 
-            virtual std::unique_ptr< UndirectedGraph > simulate() const;
+                const Eigen::MatrixXd& get_theta() const;
+                void set_theta(const Eigen::MatrixXd& theta);
 
-            Index get_nb_vertices() const;
-            void set_nb_vertices(const Index& nb_vertices);
+                Eigen::MatrixXd get_sigma() const;
 
-            double get_pi() const;
-            void set_pi(const double& pi);
+                UndirectedGraph get_graph() const;
 
-        protected:
-            Index _nb_vertices;
-            double _pi;
-    };
+            protected:
+                Eigen::VectorXd _mu;
+                Eigen::MatrixXd _theta;
+                double _determinant;
+        };
 
-    class STATISKIT_PGM_API MixtureUndirectedGraphDistribution : public PolymorphicCopy< UndirectedGraphDistribution, MixtureUndirectedGraphDistribution >
-    {
-        public:
-            struct STATISKIT_PGM_API Computation
-            {
-                virtual double ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const = 0;
+        class STATISKIT_PGM_API GraphicalGaussianDistributionMLEstimation : public ActiveEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation >
+        {
+            public:
+                GraphicalGaussianDistributionMLEstimation();
+                GraphicalGaussianDistributionMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
+                GraphicalGaussianDistributionMLEstimation(const GraphicalGaussianDistributionMLEstimation& estimation);
+                virtual ~GraphicalGaussianDistributionMLEstimation();
 
-                virtual std::vector< Eigen::VectorXd > posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm=false) const = 0;
+                class STATISKIT_CORE_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
+                {
+                    public:
+                        Estimator();
+                        Estimator(const Estimator& estimator);
+                        virtual ~Estimator();
 
-                virtual std::vector< Index > assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const = 0;
+                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
-                virtual std::unique_ptr< Computation > copy() const = 0;
-            };
+                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
 
-            class STATISKIT_PGM_API VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization
-            {
-                public:
-                    VariationalComputation();
-                    VariationalComputation(const VariationalComputation& computation);
-                    virtual ~VariationalComputation();
-                    
-                    #if defined STATISKIT_PGM_HAS_OPENMP
-                    unsigned int get_nb_jobs() const;
-                    void set_nb_jobs(const unsigned int& nb_jobs);
-                    #endif
+                        const UndirectedGraph* get_graph() const;
+                        virtual void set_graph(const UndirectedGraph& graph);
 
-                    virtual double ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const;
+                    protected:
+                        UndirectedGraph* _graph;
+                };
+        };
 
-                    virtual std::vector< Eigen::VectorXd > posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm=false) const;
+        class STATISKIT_PGM_API GraphicalGaussianDistributionNREstimation : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        {
+            public:
+                GraphicalGaussianDistributionNREstimation();
+                GraphicalGaussianDistributionNREstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
+                GraphicalGaussianDistributionNREstimation(const GraphicalGaussianDistributionNREstimation& estimation);
+                virtual ~GraphicalGaussianDistributionNREstimation();
 
-                    virtual std::vector< Index > assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const;
+                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                {
+                    public:
+                        Estimator();
+                        Estimator(const Estimator& estimator);
+                        virtual ~Estimator();
 
-                protected:
-                    #if defined STATISKIT_PGM_HAS_OPENMP
-                    unsigned int _nb_jobs;
-                    #endif
+                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
-                    inline double ldf(const std::vector< Eigen::VectorXd >& tau) const;
-            };
+                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
 
-            MixtureUndirectedGraphDistribution(const Index& nb_vertices, const Index& nb_states);
-            MixtureUndirectedGraphDistribution(const MixtureUndirectedGraphDistribution& distribution);
-            virtual ~MixtureUndirectedGraphDistribution();
-
-            virtual double ldf(const UndirectedGraph* graph) const;
-
-            virtual std::unique_ptr< UndirectedGraph > simulate() const;
-
-            Index get_nb_states() const;
-
-            const Computation* get_computation() const;
-            void set_computation(const Computation* computation);
-
-            Index get_nb_vertices() const;
-            void set_nb_vertices(const Index& nb_vertices);
-
-            const Eigen::VectorXd& get_alpha() const;
-            void set_alpha(const Eigen::VectorXd& alpha);
-
-            const Eigen::MatrixXd& get_pi() const;
-            void set_pi(const Eigen::MatrixXd& pi);
-
-            std::vector< Eigen::VectorXd > posterior(const UndirectedGraph* graph, const bool& logarithm=false) const;
-
-            std::vector< Index > assignment(const UndirectedGraph* graph) const;
-
-            // double uncertainty(const UndirectedGraph* graph, const Index& u) const;
-            // double uncertainty(const UndirectedGraph* graph) const;
-
-        protected:
-            Computation* _computation;
-            Index _nb_vertices;
-            Eigen::VectorXd _alpha;
-            Eigen::MatrixXd _pi;
-    };
+                        virtual void set_graph(const UndirectedGraph& graph);
+                };
+        };
+    }
 }
 
 #endif

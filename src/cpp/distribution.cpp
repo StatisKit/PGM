@@ -1,345 +1,342 @@
 #include "distribution.h"
+// #include <statiskit/linalg/Eigen.h>
 
 namespace statiskit
 {
-    UndirectedGraphDistribution::~UndirectedGraphDistribution()
-    {}
-
-    double UndirectedGraphDistribution::pdf(const UndirectedGraph* graph) const
-    { return exp(ldf(graph)); }
-
-    ErdosRenyiUndirectedGraphDistribution::ErdosRenyiUndirectedGraphDistribution(const Index& nb_vertices, const double& pi)
-    {
-        _nb_vertices = nb_vertices;
-        _pi = pi;
-    }
-
-    ErdosRenyiUndirectedGraphDistribution::ErdosRenyiUndirectedGraphDistribution(const ErdosRenyiUndirectedGraphDistribution& distribution)
-    {
-        _nb_vertices = distribution._nb_vertices;
-        _pi = distribution._pi;
-    }
-
-    ErdosRenyiUndirectedGraphDistribution::~ErdosRenyiUndirectedGraphDistribution()
-    {}
-
-    double ErdosRenyiUndirectedGraphDistribution::ldf(const UndirectedGraph* graph) const
-    {
-        double p;
-        if(graph)
+    namespace pgm
+    {        
+        GraphicalGaussianDistribution::GraphicalGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& theta)
         {
-            if(graph->get_nb_vertices() == _nb_vertices)
-            {
-                Index nb_edges = graph->get_nb_edges();
-                p = nb_edges * log(_pi) + ((_nb_vertices * (_nb_vertices - 1 ))/ 2 - nb_edges) *  log(1. - _pi);
-            }
-            else
-            { p = -1 * std::numeric_limits< double >::infinity(); }
+            if(mu.size() != theta.rows())
+            { throw size_error("mu", mu.size(), theta.rows(), size_error::equal); }
+            if(mu.size() != theta.cols())
+            { throw size_error("mu", mu.size(), theta.cols(), size_error::equal); }
+            _mu = mu;
+            _theta = theta;
+            _determinant = _theta.inverse().determinant();
         }
-        else
-        { p = 0.; }
-        return p;
-    }
 
-    std::unique_ptr< UndirectedGraph > ErdosRenyiUndirectedGraphDistribution::simulate() const
-    { 
-        std::unique_ptr< UndirectedGraph > graph = std::make_unique< UndirectedGraph >(_nb_vertices);
-        for(Index u = 1; u < _nb_vertices; ++u)
+        GraphicalGaussianDistribution::GraphicalGaussianDistribution(const GraphicalGaussianDistribution& gaussian)
         {
-            for(Index v = 0; v < u; ++v)
-            {
-                if(boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())() < _pi)
-                { graph->add_edge(u, v); }
-            }
+            _mu = gaussian._mu;
+            _theta = gaussian._theta;
+            _determinant = gaussian._determinant;
         }
-        return std::move(graph);
-    }
 
-    Index ErdosRenyiUndirectedGraphDistribution::get_nb_vertices() const
-    { return _nb_vertices; }
+        GraphicalGaussianDistribution::~GraphicalGaussianDistribution()
+        {}
 
-    void ErdosRenyiUndirectedGraphDistribution::set_nb_vertices(const Index& nb_vertices)
-    { _nb_vertices = nb_vertices; }
+        Index GraphicalGaussianDistribution::get_nb_components() const
+        { return _mu.size(); }
 
-    double ErdosRenyiUndirectedGraphDistribution::get_pi() const
-    { return _pi; }
-
-    void ErdosRenyiUndirectedGraphDistribution::set_pi(const double& pi)
-    { _pi = pi; }
-
-    MixtureUndirectedGraphDistribution::VariationalComputation::VariationalComputation() : Optimization()
-    {
-        #if defined STATISKIT_PGM_HAS_OPENMP
-        _nb_jobs = omp_get_num_procs();
-        #endif
-    }
-
-    MixtureUndirectedGraphDistribution::VariationalComputation::VariationalComputation(const VariationalComputation& computation) : Optimization(computation)
-    {
-        #if defined STATISKIT_PGM_HAS_OPENMP
-        _nb_jobs = computation._nb_jobs;
-        #endif
-    }
-
-    MixtureUndirectedGraphDistribution::VariationalComputation::~VariationalComputation()
-    {}
-
-    #if defined STATISKIT_PGM_HAS_OPENMP
-    unsigned int MixtureUndirectedGraphDistribution::VariationalComputation::get_nb_jobs() const
-    { return _nb_jobs; }
-
-    void MixtureUndirectedGraphDistribution::VariationalComputation::set_nb_jobs(const unsigned int& nb_jobs)
-    { _nb_jobs = nb_jobs; }
-    #endif
-
-    double MixtureUndirectedGraphDistribution::VariationalComputation::ldf(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const
-    { return ldf(posterior(mixture, graph, true)); }
-
-    std::vector< Eigen::VectorXd > MixtureUndirectedGraphDistribution::VariationalComputation::posterior(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph, const bool& logarithm) const
-    { 
-        Index nb_states = mixture.get_nb_states();
-        Eigen::VectorXd alpha = mixture._alpha;
-        std::vector< Eigen::VectorXd > tau(graph->get_nb_vertices(), alpha);
-        Eigen::MatrixXd p = mixture._pi, q = mixture._pi;
-        for(Index su = 0; su < nb_states; ++su)
-        { alpha[su] = log(alpha[su]); }
-        for(Index su = 0; su < nb_states; ++su)
-        {
-            for(Index sw = 0; sw < nb_states; ++sw)
+        unsigned int GraphicalGaussianDistribution::get_nb_parameters() const
+        { 
+            unsigned int nb_parameters = 0;
+            for(Index i = 0, max_index = get_nb_components(); i < max_index; ++i)
             {
-                p(su, sw) = log(p(su, sw));
-                q(su, sw) = log(1. - q(su, sw)); 
-            }
-        }
-        unsigned int its = 0;
-        double delta;
-        do
-        {
-            delta = 0;
-            for(Index u = 0, v = graph->get_nb_vertices(); u < v; ++u)
-            {
-                Eigen::VectorXd _tau = alpha;
-                for(Index su = 0; su < nb_states; ++su)
+                if(_mu(i) != 0.)
+                { ++nb_parameters; }
+                for(Index j = 0; j < i; ++j)
                 {
-                    for(Index w = 0; w < v; ++w)
-                    { 
-                        if(w != u)
-                        {
-                            bool edge = graph->has_edge(u, w);
-                            for(Index sw = 0; sw < nb_states; ++sw)
-                            {
-                                if(edge)
-                                { _tau[su] += tau[w][sw] * p(su, sw); }
-                                else
-                                { _tau[su] += tau[w][sw] * q(su, sw); }
-                            }
-                        }
-                    }
+                    if(_theta(i,j) != 0.)
+                    { ++nb_parameters; }
                 }
-                double max = _tau.maxCoeff(), sum = 0.;
-                for(Index index = 0, max_index = tau[u].size(); index < max_index; ++index)
+            }
+            return nb_parameters;
+        }
+        
+        std::unique_ptr< MultivariateEvent > GraphicalGaussianDistribution::simulate() const
+        {
+            Eigen::VectorXd x(get_nb_components());
+            boost::normal_distribution<> dist(0.,1.);
+            boost::variate_generator<boost::mt19937&, boost::normal_distribution<> > simulator(__impl::get_random_generator(), dist);
+            for (Index index = 0, max_index = x.size(); index < max_index; ++index)
+            { x(index) = simulator(); }
+            Eigen::LLT< Eigen:: MatrixXd > llt(_theta.inverse());
+            Eigen::MatrixXd B = llt.matrixL();
+            x = _mu + B * x;
+            return std::make_unique< VectorEvent >(x);
+        }
+
+        const Eigen::VectorXd& GraphicalGaussianDistribution::get_mu() const
+        { return _mu; }
+
+        void GraphicalGaussianDistribution::set_mu(const Eigen::VectorXd& mu)
+        { _mu = mu; }
+
+        const Eigen::MatrixXd& GraphicalGaussianDistribution::get_theta() const
+        { return _theta; }
+
+        void GraphicalGaussianDistribution::set_theta(const Eigen::MatrixXd& theta)
+        { _theta = theta; }
+
+        Eigen::MatrixXd GraphicalGaussianDistribution::get_sigma() const
+        { return _theta.inverse(); }
+
+        UndirectedGraph GraphicalGaussianDistribution::get_graph() const
+        {
+            UndirectedGraph graph(get_nb_components());
+            for(Index i = 0, max_index = get_nb_components(); i < max_index; ++i)
+            {
+                for(Index j = 0; j < i; ++j)
                 {
-                    if(boost::math::isfinite(tau[u][index]))
-                    { _tau[index] = _tau[index] - max; }
-                    _tau[index] = exp(_tau[index]);
-                    sum += _tau[index];
+                    if(_theta(i,j) != 0.)
+                    { graph.add_edge(i, j); }
                 }
-                _tau = _tau / sum;
-                delta += __impl::reldiff(tau[u], _tau);
-                tau[u] = _tau;
             }
-            delta /= graph->get_nb_vertices();
-            ++its;
-        } while(run(its, delta));
-        if(logarithm)
-        {
-            for(Index u = 0, v = tau.size(); u < v; ++u)
-            {
-                for(Index index = 0, max_index = tau[u].size(); index < max_index; ++index)
-                { tau[u][index] = log(tau[u][index]); }
-            }
+            return graph;
         }
-        return tau;
-    }
 
-    std::vector< Index > MixtureUndirectedGraphDistribution::VariationalComputation::assignment(const MixtureUndirectedGraphDistribution& mixture, const UndirectedGraph* graph) const
-    { 
-        std::vector< Eigen::VectorXd > tau = posterior(mixture, graph);
-        std::vector< Index > indices(tau.size());
-        Eigen::Index row;
-        for(Index u = 0, v = tau.size(); u < v; ++u)
+        double GraphicalGaussianDistribution::probability(const MultivariateEvent* event, const bool& logarithm) const
         {
-            tau[u].maxCoeff(&row);
-            { indices[u] = row; }
-        }
-        return indices;
-    }
-
-    double MixtureUndirectedGraphDistribution::VariationalComputation::ldf(const std::vector< Eigen::VectorXd >& tau) const
-    { 
-        double p = 0.;
-        for(Index u = 0, v = tau.size(); u < v; ++u)
-        {
-            for(Index w = 0; w < u; ++w)
+            double p;
+            if(event)
             {
-                for(Index su = 0; su < tau[u].size(); ++su)
+                if(event->size() == get_nb_components())
                 {
-                    if(boost::math::isfinite(tau[u][su]))
+                    Eigen::VectorXd x(get_nb_components());
+                    for(Index index = 0, max_index = get_nb_components(); index < max_index; ++index)
                     {
-                        for(Index sw = 0; sw < tau[w].size(); ++sw)
-                        {
-                            if(boost::math::isfinite(tau[w][sw]))
-                            { p += tau[u][su] + tau[w][sw]; }
-                        }
+                        const UnivariateEvent* uevent = event->get(index);
+                        if(uevent && uevent->get_outcome() == CONTINUOUS && uevent->get_event() == ELEMENTARY)
+                        { x(index) = static_cast< const ContinuousElementaryEvent* >(uevent)->get_value(); }
+                        else
+                        { x(index) = std::numeric_limits< double >::quiet_NaN(); }
                     }
+                    if(logarithm)
+                    { p =  - 1 / 2. * (get_nb_components() * log(2 * boost::math::constants::pi< double >()) + log(_determinant) + (x - _mu).transpose() * _theta * (x - _mu)); }
+                    if(!logarithm)
+                    { p =  1 / pow(2 * boost::math::constants::pi<double>(), get_nb_components() / 2.) * 1 / sqrt(_determinant) * exp(- 1 / 2. * (x - _mu).transpose() * _theta * (x - _mu)); }
                 }
+                else
+                { p = std::numeric_limits< double >::quiet_NaN(); }
             }
-        }
-        return p;
-    }
-
-    MixtureUndirectedGraphDistribution::MixtureUndirectedGraphDistribution(const Index& nb_vertices, const Index& nb_states)
-    {
-        _computation = new VariationalComputation();
-        _nb_vertices = nb_vertices;
-        _alpha = Eigen::VectorXd::Ones(nb_states) / double(nb_states);
-        _pi = 0.5 * Eigen::MatrixXd::Ones(nb_states, nb_states);
-    }
-
-    MixtureUndirectedGraphDistribution::MixtureUndirectedGraphDistribution(const MixtureUndirectedGraphDistribution& distribution)
-    {
-        if( distribution._computation)
-        { _computation = distribution._computation->copy().release(); }
-        else
-        { _computation = nullptr; }
-        _nb_vertices = distribution._nb_vertices;
-        _alpha = distribution._alpha;
-        _pi = distribution._pi;
-    }
-
-    MixtureUndirectedGraphDistribution::~MixtureUndirectedGraphDistribution()
-    {
-        if(_computation)
-        {
-            delete _computation;
-            _computation = nullptr;
-        }
-    }
-
-    double MixtureUndirectedGraphDistribution::ldf(const UndirectedGraph* graph) const
-    {
-        double p;
-        if(graph)
-        {
-            if(_computation)
-            { p = _computation->ldf(*this, graph); }
+            else if(logarithm)
+            { p = 0.; }
             else
-            { throw member_error("_computation", "not given"); }
+            { p = 1.; }
+            return p;
         }
-        else
-        { p = 0.; }
-        return p;
-    }
 
-    std::unique_ptr< UndirectedGraph > MixtureUndirectedGraphDistribution::simulate() const
-    { 
-        std::unique_ptr< UndirectedGraph > graph = std::make_unique< UndirectedGraph >(_nb_vertices);
-        std::vector< Index > states(_nb_vertices);
-        Index max_index = get_nb_states(), v = _nb_vertices;
-        for(Index u = 0; u < v; ++u)
+        GraphicalGaussianDistributionMLEstimation::GraphicalGaussianDistributionMLEstimation()
+        {}
+
+        GraphicalGaussianDistributionMLEstimation::GraphicalGaussianDistributionMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data) : ActiveEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation >(estimated, data)
+        {}
+
+        GraphicalGaussianDistributionMLEstimation::GraphicalGaussianDistributionMLEstimation(const GraphicalGaussianDistributionMLEstimation& estimation) : ActiveEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation >(estimation)
+        {}
+
+        GraphicalGaussianDistributionMLEstimation::~GraphicalGaussianDistributionMLEstimation()
+        {}
+
+        GraphicalGaussianDistributionMLEstimation::Estimator::Estimator()
+        { _graph = nullptr; }
+
+        GraphicalGaussianDistributionMLEstimation::Estimator::Estimator(const Estimator& estimator)
+        { _graph = estimator._graph->copy().release(); }
+
+        GraphicalGaussianDistributionMLEstimation::Estimator::~Estimator()
         {
-            Index index = 0;
-            double cp = _alpha[index], sp = boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())();
-            while(cp < sp && index < max_index)
+            if(_graph)
+            { delete _graph; }
+        }
+
+        std::unique_ptr< MultivariateDistributionEstimation > GraphicalGaussianDistributionMLEstimation::Estimator::operator() (const MultivariateData& data, const bool& lazy) const
+        {
+            if(!_graph)
+            { throw member_error("graph", "you must give a graph to infer a graphical Gaussian distribution"); }
+            const MultivariateSampleSpace* sample_space = data.get_sample_space();
+            if(_graph->get_nb_vertices() != sample_space->size())
+            { throw parameter_error("data", "must have the same number of components as the number of vertices in the given graph"); }
+            for(Index index = 0, max_index = sample_space->size(); index < max_index; ++index)
             {
-                ++index;
-                cp += _alpha[index];
+                if(sample_space->get(index)->get_outcome() != CONTINUOUS)
+                { throw sample_space_error(CONTINUOUS); }
             }
-            states[u] = index;
-        }
-        for(Index u = 0; u < v; ++u)
-        {
-            for(Index w = 0; w < u; ++w)
+            NaturalMeanVectorEstimation::Estimator mean_estimator = NaturalMeanVectorEstimation::Estimator();
+            std::unique_ptr< MeanVectorEstimation > mean_estimation = mean_estimator(data);
+            NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
+            std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
+            Eigen::MatrixXd S = covariance_estimation->get_covariance();
+            CliqueTree clique_tree = CliqueTree(*_graph);
+            Eigen::MatrixXd X = S;
+            for(Index index = clique_tree.get_nb_cliques(), min_index = 1; index > min_index; --index)
             {
-                if(boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())() < _pi(states[u], states[w]))
-                { graph->add_edge(u, w); }
+                submatrix(X,
+                          clique_tree.get_separator(index - 1),
+                          clique_tree.get_clique(index - 1), 
+                          submatrix(X,
+                                    clique_tree.get_separator(index - 1),
+                                    clique_tree.get_clique(index - 1))
+                              * submatrix(X,
+                                          clique_tree.get_clique(index - 1),
+                                          clique_tree.get_clique(index - 1)).inverse());
+                submatrix(X,
+                          clique_tree.get_separator(index - 1),
+                          clique_tree.get_separator(index - 1),
+                          submatrix(X,
+                                    clique_tree.get_separator(index - 1),
+                                    clique_tree.get_separator(index - 1))
+                             - submatrix(X,
+                                         clique_tree.get_separator(index - 1),
+                                         clique_tree.get_clique(index - 1))
+                             * submatrix(X,
+                                         clique_tree.get_clique(index - 1),
+                                         clique_tree.get_clique(index - 1)).inverse()
+                             * submatrix(X,
+                                         clique_tree.get_separator(index - 1),
+                                         clique_tree.get_clique(index - 1)).transpose());  
             }
-        }
-        return std::move(graph);
-    }
-
-    Index MixtureUndirectedGraphDistribution::get_nb_states() const
-    { return _alpha.size(); }
-
-    const MixtureUndirectedGraphDistribution::Computation* MixtureUndirectedGraphDistribution::get_computation() const
-    { return _computation; }
-
-    void MixtureUndirectedGraphDistribution::set_computation(const Computation* computation)
-    {
-        delete _computation;
-        if(_computation)
-        { _computation = computation->copy().release(); }
-    }
-
-    Index MixtureUndirectedGraphDistribution::get_nb_vertices() const
-    { return _nb_vertices; }
-
-    void MixtureUndirectedGraphDistribution::set_nb_vertices(const Index& nb_vertices)
-    { _nb_vertices = nb_vertices; }
-
-    const Eigen::VectorXd& MixtureUndirectedGraphDistribution::get_alpha() const
-    { return _alpha; }
-
-    void MixtureUndirectedGraphDistribution::set_alpha(const Eigen::VectorXd& alpha)
-    {
-        if(alpha.size() != _alpha.size())
-        { throw size_error("alpha", _alpha.size(), size_error::equal); }
-        _alpha = alpha / alpha.sum();
-    }
-
-    const Eigen::MatrixXd& MixtureUndirectedGraphDistribution::get_pi() const
-    { return _pi; }
-
-    void MixtureUndirectedGraphDistribution::set_pi(const Eigen::MatrixXd& pi)
-    {
-        if(pi.rows() != _pi.rows() || pi.cols() != _pi.cols())
-        { throw std::runtime_error("matrix"); }
-        for(Index u = 0, v = get_nb_states(); u < v; ++u)
-        {
-            for(Index w = 0; w < v; ++w)
-            { 
-                if(pi(u, w) < 0. || pi(u, w) > 1.)
-                { throw std::runtime_error("matrix"); }
-            }
-        }
-        for(Index u = 0, v = get_nb_states(); u < v; ++u)
-        {
-            _pi(u, u) = pi(u, u);
-            for(Index w = 0; w < u; ++w)
+            Eigen::MatrixXd D = Eigen::MatrixXd::Zero(X.rows(), X.cols());
+            for(Index index = 0, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
+            { submatrix(D, clique_tree.get_clique(index), clique_tree.get_clique(index), submatrix(X, clique_tree.get_clique(index), clique_tree.get_clique(index))); }
+            Eigen::MatrixXd K = D.inverse();
+            for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             {
-                _pi(u, w) = (pi(u, w) + pi(w, u))/2.;
-                _pi(w, u) = _pi(u, w);
+                submatrix(K,
+                          clique_tree.get_clique(index),
+                          clique_tree.get_separator(index),
+                          - submatrix(K,
+                                      clique_tree.get_clique(index),
+                                      clique_tree.get_clique(index))
+                            * submatrix(S,
+                                        clique_tree.get_clique(index),
+                                        clique_tree.get_separator(index))
+                            * submatrix(S,
+                                        clique_tree.get_separator(index),
+                                        clique_tree.get_separator(index)));
+                submatrix(K,
+                          clique_tree.get_separator(index),
+                          clique_tree.get_clique(index),
+                          submatrix(K,
+                                    clique_tree.get_clique(index),
+                                    clique_tree.get_separator(index)).transpose());
+                submatrix(K,
+                          clique_tree.get_separator(index),
+                          clique_tree.get_separator(index),
+                          submatrix(K,
+                                    clique_tree.get_separator(index),
+                                    clique_tree.get_separator(index))
+                            + submatrix(K,
+                                        clique_tree.get_separator(index),
+                                        clique_tree.get_clique(index))
+                            * submatrix(K,
+                                        clique_tree.get_clique(index),
+                                        clique_tree.get_clique(index)).inverse()
+                            * submatrix(K,
+                                        clique_tree.get_clique(index),
+                                        clique_tree.get_separator(index)));
             }
+            std::unique_ptr< GraphicalGaussianDistributionMLEstimation > estimation = std::make_unique< GraphicalGaussianDistributionMLEstimation >(new GraphicalGaussianDistribution(mean_estimation->get_mean(), K), &data);
+            return std::move(estimation);
         }
-    }
 
-    std::vector< Eigen::VectorXd > MixtureUndirectedGraphDistribution::posterior(const UndirectedGraph* graph, const bool& logarithm) const
-    { 
-        std::vector< Eigen::VectorXd > tau;
-        if(_computation)
-        { tau = _computation->posterior(*this, graph, logarithm); }
-        else
-        { throw member_error("_computation", "not given"); }
-        return tau;
-    }
+        std::unique_ptr< MultivariateDistributionEstimation::Estimator > GraphicalGaussianDistributionMLEstimation::Estimator::copy() const
+        { return std::make_unique< Estimator >(*this); }
 
-    std::vector< Index > MixtureUndirectedGraphDistribution::assignment(const UndirectedGraph* graph) const
-    { 
-        std::vector< Index > indices;
-        if(_computation)
-        { indices = _computation->assignment(*this, graph); }
-        else
-        { throw member_error("_computation", "not given"); }
-        return indices;
+        const UndirectedGraph* GraphicalGaussianDistributionMLEstimation::Estimator::get_graph() const
+        { return _graph; }
+
+        void GraphicalGaussianDistributionMLEstimation::Estimator::set_graph(const UndirectedGraph& graph)
+        { 
+            if(!graph.is_chordal())
+            { throw parameter_error("graph", "must be a chordal graph"); }
+            if(_graph)
+            { delete _graph; }
+            _graph = graph.copy().release(); 
+        }
+
+        GraphicalGaussianDistributionNREstimation::GraphicalGaussianDistributionNREstimation() : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >()
+        {}
+
+        GraphicalGaussianDistributionNREstimation::GraphicalGaussianDistributionNREstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data) : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >(estimated, data)
+        {}
+
+        GraphicalGaussianDistributionNREstimation::GraphicalGaussianDistributionNREstimation(const GraphicalGaussianDistributionNREstimation& estimation) : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >(estimation)
+        {}
+
+        GraphicalGaussianDistributionNREstimation::~GraphicalGaussianDistributionNREstimation()
+        {}
+
+        GraphicalGaussianDistributionNREstimation::Estimator::Estimator() : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator()
+        {}
+
+        GraphicalGaussianDistributionNREstimation::Estimator::Estimator(const Estimator& estimator) : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator(estimator)
+        {}
+
+        GraphicalGaussianDistributionNREstimation::Estimator::~Estimator()
+        {}
+
+        std::unique_ptr< MultivariateDistributionEstimation > GraphicalGaussianDistributionNREstimation::Estimator::operator() (const MultivariateData& data, const bool& lazy) const
+        {
+            if(!_graph)
+            { throw member_error("graph", "you must give a graph to infer a graphical Gaussian distribution"); }
+            const MultivariateSampleSpace* sample_space = data.get_sample_space();
+            if(_graph->get_nb_vertices() != sample_space->size())
+            { throw parameter_error("data", "must have the same number of components as the number of vertices in the given graph"); }
+            for(Index index = 0, max_index = sample_space->size(); index < max_index; ++index)
+            {
+                if(sample_space->get(index)->get_outcome() != CONTINUOUS)
+                { throw sample_space_error(CONTINUOUS); }
+            }
+            NaturalMeanVectorEstimation::Estimator mean_estimator = NaturalMeanVectorEstimation::Estimator();
+            std::unique_ptr< MeanVectorEstimation > mean_estimation = mean_estimator(data);
+            NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
+            std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
+            Eigen::MatrixXd S = covariance_estimation->get_covariance();
+            unsigned int q = _graph->get_nb_edges() + _graph->get_nb_vertices();
+            Eigen::VectorXd x = Eigen::VectorXd::Ones(q);
+            std::vector< Index > I(q), J(q);
+            Eigen::MatrixXd E0 = Eigen::MatrixXd::Zero(sample_space->size(), q), E1 = Eigen::MatrixXd::Zero(sample_space->size(), q);
+            q = 0;
+            for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
+            {
+                const Neighbours& ne = _graph->neighbours(u);
+                Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end();
+                while(itv != itv_end && *itv < u)
+                {
+                    I[q] = u;
+                    J[q] = *itv;
+                    E0(u, q) = 1;
+                    E1(*itv, q) = 1;
+                    ++q;
+                    ++itv;
+                }
+                I[q] = u;
+                J[q] = u;
+                E0(u, q) = 1;
+                E1(u, q) = 1;
+                // x(q) = 1. / (2 * S(u, u));
+                ++q;
+            }
+            std::cout << E0 << std::endl << std::endl;
+            std::cout << E1 << std::endl << std::endl;
+            std::cout << x << std::endl << std::endl;
+            Eigen::MatrixXd Kc = E0 * x.asDiagonal() * E1.transpose() + E1 * x.asDiagonal() * E0.transpose(), Kp;
+            std::cout << Kc << std::endl << std::endl;
+            unsigned int its = 0;
+            do
+            {
+                Kp = Kc;
+                Eigen::MatrixXd Kinv = Kp.inverse();
+                Eigen::VectorXd s = 2 * (submatrix(S, I, J) - submatrix(Kinv, I, J)).diagonal();
+                std::cout << s << std::endl << std::endl;
+                Eigen::MatrixXd H = 2 * submatrix(Kinv, I, I).cwiseProduct(submatrix(Kinv, J, J)) + 2 * submatrix(Kinv, I, J).cwiseProduct(submatrix(Kinv, J, I));
+                std::cout << H << std::endl << std::endl;
+                s = (x - s).eval();
+                x = statiskit::linalg::solve(H , s, statiskit::linalg::solver_type::jacobiSvd);
+                Kc = E0 * x.asDiagonal() * E1.transpose() + E1 * x.asDiagonal() * E0.transpose();
+                ++its;
+            } while(run(its, __impl::reldiff(Kc, Kp)));
+            std::unique_ptr< GraphicalGaussianDistributionNREstimation > estimation = std::make_unique< GraphicalGaussianDistributionNREstimation >(new GraphicalGaussianDistribution(mean_estimation->get_mean(), Kc), &data);
+            return std::move(estimation);
+        }
+
+        std::unique_ptr< MultivariateDistributionEstimation::Estimator > GraphicalGaussianDistributionNREstimation::Estimator::copy() const
+        { return std::make_unique< Estimator >(*this); }
+
+        void GraphicalGaussianDistributionNREstimation::Estimator::set_graph(const UndirectedGraph& graph)
+        { _graph = graph.copy().release(); }
     }
 }
