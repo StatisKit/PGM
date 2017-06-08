@@ -238,6 +238,9 @@ namespace statiskit
             return cliques;
         }
 
+        double UndirectedGraph::density() const
+        { return 2 * get_nb_edges() / double(get_nb_vertices() * (get_nb_vertices() - 1)) ; }
+
         std::unique_ptr< UndirectedGraph > UndirectedGraph::copy() const
         { return std::make_unique< UndirectedGraph >(*this); }
 

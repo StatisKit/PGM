@@ -7,11 +7,12 @@
 ##################################################################################
 
 from functools import wraps
-from statiskit.core.estimation import _estimation
+from statiskit.core.estimation import _estimation, optimization_estimation_decorator
 
 import statiskit.pgm._pgm
+from statiskit.pgm.__pgm.statiskit import _OptimizationEstimation
 from statiskit.pgm.__pgm.statiskit.pgm import (GraphicalGaussianDistributionMLEstimation,
-                                               GraphicalGaussianDistributionNREstimation)
+                                               GraphicalGaussianDistributionIMLEstimation)
 
 __all__ = ['graphical_gaussian_estimation']
 
@@ -21,8 +22,12 @@ def graphical_gaussian_estimation(algo='ml', data=None, **kwargs):
     return _estimation(algo, 
                        data,
                        dict(ml = GraphicalGaussianDistributionMLEstimation.Estimator,
-                            nr = GraphicalGaussianDistributionNREstimation.Estimator),
+                            cdml = GraphicalGaussianDistributionIMLEstimation.CDEstimator,
+                            nrml = GraphicalGaussianDistributionIMLEstimation.NREstimator),
                        **kwargs)
 
 GraphicalGaussianDistributionMLEstimation.Estimator.graph = property(GraphicalGaussianDistributionMLEstimation.Estimator.get_graph, GraphicalGaussianDistributionMLEstimation.Estimator.set_graph)
 del GraphicalGaussianDistributionMLEstimation.Estimator.get_graph, GraphicalGaussianDistributionMLEstimation.Estimator.set_graph
+
+for cls in [_OptimizationEstimation]:
+    optimization_estimation_decorator(cls)

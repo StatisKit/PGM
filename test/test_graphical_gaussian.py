@@ -40,6 +40,18 @@ class TestGraphicalGaussianDistribution(unittest.TestCase):
         mle = pgm.graphical_gaussian_estimation('ml', data, graph=self._dist.graph)
         self.assertGreaterEqual(mle.estimated.loglikelihood(data), self._dist.loglikelihood(data))
 
+    def test_nrmle(self):
+        """Test graphical Gaussian distribution ML estimation using Newton-Raphson algorithm"""
+        data = self._dist.simulation(10)
+        nrmle = pgm.graphical_gaussian_estimation('nrml', data, graph=self._dist.graph)
+        self.assertGreaterEqual(nrmle.estimated.loglikelihood(data), self._dist.loglikelihood(data))
+
+    def test_cdmle(self):
+        """Test graphical Gaussian distribution ML estimation using coordinate-descent algorithm"""
+        data = self._dist.simulation(100)
+        cdmle = pgm.graphical_gaussian_estimation('cdml', data, graph=self._dist.graph)
+        self.assertGreaterEqual(cdmle.estimated.loglikelihood(data), self._dist.loglikelihood(data))
+
     @classmethod
     def tearDownClass(cls):
         """Test graphical Gaussian distribution deletion"""

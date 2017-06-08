@@ -45,6 +45,7 @@ void wrapper_331ef33706e258869683f17891e9bdb0()
     class ::std::vector< unsigned long int, class ::std::allocator< unsigned long int > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_f05fc960b1a85c918a7ae9e3f9489fb6)() const = &::statiskit::pgm::UndirectedGraph::depth_first_search;
     bool  (::statiskit::pgm::UndirectedGraph::*method_pointer_7801bcf992eb510f9442354f964f36b4)() const = &::statiskit::pgm::UndirectedGraph::is_chordal;
     class ::std::vector< class ::std::set< unsigned long int, struct ::std::less< unsigned long int >, class ::std::allocator< unsigned long int > >, class ::std::allocator< class ::std::set< unsigned long int, struct ::std::less< unsigned long int >, class ::std::allocator< unsigned long int > > > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_6d708644708250418009ece11b4916c0)() const = &::statiskit::pgm::UndirectedGraph::bron_kerbosch;
+    double  (::statiskit::pgm::UndirectedGraph::*method_pointer_c20224adcfdf5fcf83dbb79fdb6415d2)() const = &::statiskit::pgm::UndirectedGraph::density;
     class ::std::unique_ptr< class ::statiskit::pgm::UndirectedGraph, struct ::std::default_delete< class ::statiskit::pgm::UndirectedGraph > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_d75279f2192553b88f849aabd86abe20)() const = &::statiskit::pgm::UndirectedGraph::copy;
     boost::python::class_< class ::statiskit::pgm::UndirectedGraph, autowig::Held< class ::statiskit::pgm::UndirectedGraph >::Type > class_331ef33706e258869683f17891e9bdb0("UndirectedGraph", "", boost::python::no_init);
     class_331ef33706e258869683f17891e9bdb0.def(boost::python::init< ::statiskit::Index const & >(""));
@@ -66,6 +67,7 @@ void wrapper_331ef33706e258869683f17891e9bdb0()
     class_331ef33706e258869683f17891e9bdb0.def("depth_first_search", method_pointer_f05fc960b1a85c918a7ae9e3f9489fb6, "");
     class_331ef33706e258869683f17891e9bdb0.def("is_chordal", method_pointer_7801bcf992eb510f9442354f964f36b4, "");
     class_331ef33706e258869683f17891e9bdb0.def("bron_kerbosch", method_pointer_6d708644708250418009ece11b4916c0, "");
+    class_331ef33706e258869683f17891e9bdb0.def("density", method_pointer_c20224adcfdf5fcf83dbb79fdb6415d2, "");
     class_331ef33706e258869683f17891e9bdb0.def("copy", method_pointer_d75279f2192553b88f849aabd86abe20, "");
 
 }

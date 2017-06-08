@@ -1,8 +1,8 @@
 __all__ = []
 
 # Import dependency decorator modules
-import statiskit.linalg._linalg
 import statiskit.stl._stl
+import statiskit.linalg._linalg
 import statiskit.core._core
 
 # Import Boost.Python module
@@ -14,7 +14,8 @@ __pgm.statiskit._OptimizationEstimation_3904034af6025a76b81ffce10e208079.Estimat
 __pgm.statiskit.pgm.MixtureUndirectedGraphProcess.Computation = __pgm.statiskit.pgm._mixture_undirected_graph_process.Computation
 __pgm.statiskit.pgm.MixtureUndirectedGraphProcess.VariationalComputation = __pgm.statiskit.pgm._mixture_undirected_graph_process.VariationalComputation
 __pgm.statiskit.pgm.GraphicalGaussianDistributionMLEstimation.Estimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_ml_estimation.Estimator
-__pgm.statiskit.pgm.GraphicalGaussianDistributionNREstimation.Estimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_nr_estimation.Estimator
+__pgm.statiskit.pgm.GraphicalGaussianDistributionIMLEstimation.CDEstimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_iml_estimation.CDEstimator
+__pgm.statiskit.pgm.GraphicalGaussianDistributionIMLEstimation.NREstimator = __pgm.statiskit.pgm._graphical_gaussian_distribution_iml_estimation.NREstimator
 
 # Group template specializations
 __pgm.statiskit._LazyEstimation = (__pgm.statiskit._LazyEstimation_53187b7919eb50ee8798d33c37718ba9, __pgm.statiskit._LazyEstimation_77bd6af9231c549291f1ae7884d83aa9)

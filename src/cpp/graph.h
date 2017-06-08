@@ -123,6 +123,8 @@ namespace statiskit
 
                 std::vector< Indices > bron_kerbosch() const;
 
+                double density() const;
+                
                 virtual std::unique_ptr< UndirectedGraph > copy() const;
 
             protected:

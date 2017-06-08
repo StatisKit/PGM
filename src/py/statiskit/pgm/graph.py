@@ -19,6 +19,8 @@ del UndirectedGraph.get_nb_edges
 
 UndirectedGraph.is_chordal = property(UndirectedGraph.is_chordal)
 
+UndirectedGraph.density = property(UndirectedGraph.density)
+
 def to_matrix(self, sort=None):
     if sort is None:
         vertices = range(self.nb_vertices)

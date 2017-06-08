@@ -33,6 +33,7 @@ void wrapper_5c2a7cec30185bd1b4045fa949b66f81()
     void  (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_c56e9061cd285a25aadda76918ac0803)(class ::Eigen::Matrix< double, -1, 1, 0, -1, 1 > const &) = &::statiskit::pgm::GraphicalGaussianDistribution::set_mu;
     class ::Eigen::Matrix< double, -1, -1, 0, -1, -1 > const & (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_63a06558a5a8507e9fb3d4a03f907520)() const = &::statiskit::pgm::GraphicalGaussianDistribution::get_theta;
     void  (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_3a58e3d817da5cb585b1a05c1e13b40d)(class ::Eigen::Matrix< double, -1, -1, 0, -1, -1 > const &) = &::statiskit::pgm::GraphicalGaussianDistribution::set_theta;
+    class ::Eigen::Matrix< double, -1, -1, 0, -1, -1 > const & (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_6d961f1784bd5843a66cc4bf13b72532)() const = &::statiskit::pgm::GraphicalGaussianDistribution::get_cholesky;
     class ::Eigen::Matrix< double, -1, -1, 0, -1, -1 >  (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_0c801a7692925b268888876d3916c534)() const = &::statiskit::pgm::GraphicalGaussianDistribution::get_sigma;
     class ::statiskit::pgm::UndirectedGraph  (::statiskit::pgm::GraphicalGaussianDistribution::*method_pointer_fde746a0d0c557989fa3257ff9b7b040)() const = &::statiskit::pgm::GraphicalGaussianDistribution::get_graph;
     boost::python::class_< class ::statiskit::pgm::GraphicalGaussianDistribution, autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistribution >::Type, boost::python::bases< struct ::statiskit::PolymorphicCopy< struct ::statiskit::MultivariateDistribution, class ::statiskit::pgm::GraphicalGaussianDistribution, struct ::statiskit::ContinuousMultivariateDistribution > > > class_5c2a7cec30185bd1b4045fa949b66f81("GraphicalGaussianDistribution", "", boost::python::no_init);
@@ -42,6 +43,7 @@ void wrapper_5c2a7cec30185bd1b4045fa949b66f81()
     class_5c2a7cec30185bd1b4045fa949b66f81.def("set_mu", method_pointer_c56e9061cd285a25aadda76918ac0803, "");
     class_5c2a7cec30185bd1b4045fa949b66f81.def("get_theta", method_pointer_63a06558a5a8507e9fb3d4a03f907520, boost::python::return_value_policy< boost::python::return_by_value >(), "");
     class_5c2a7cec30185bd1b4045fa949b66f81.def("set_theta", method_pointer_3a58e3d817da5cb585b1a05c1e13b40d, "");
+    class_5c2a7cec30185bd1b4045fa949b66f81.def("get_cholesky", method_pointer_6d961f1784bd5843a66cc4bf13b72532, boost::python::return_value_policy< boost::python::return_by_value >(), "");
     class_5c2a7cec30185bd1b4045fa949b66f81.def("get_sigma", method_pointer_0c801a7692925b268888876d3916c534, "");
     class_5c2a7cec30185bd1b4045fa949b66f81.def("get_graph", method_pointer_fde746a0d0c557989fa3257ff9b7b040, "");
 

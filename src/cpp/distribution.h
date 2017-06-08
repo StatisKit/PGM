@@ -33,6 +33,8 @@ namespace statiskit
                 const Eigen::MatrixXd& get_theta() const;
                 void set_theta(const Eigen::MatrixXd& theta);
 
+                const Eigen::MatrixXd& get_cholesky() const;
+
                 Eigen::MatrixXd get_sigma() const;
 
                 UndirectedGraph get_graph() const;
@@ -40,6 +42,7 @@ namespace statiskit
             protected:
                 Eigen::VectorXd _mu;
                 Eigen::MatrixXd _theta;
+                Eigen::MatrixXd _cholesky;
                 double _determinant;
         };
 
@@ -70,26 +73,52 @@ namespace statiskit
                 };
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistributionNREstimation : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        class STATISKIT_PGM_API GraphicalGaussianDistributionIMLEstimation : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
         {
             public:
-                GraphicalGaussianDistributionNREstimation();
-                GraphicalGaussianDistributionNREstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
-                GraphicalGaussianDistributionNREstimation(const GraphicalGaussianDistributionNREstimation& estimation);
-                virtual ~GraphicalGaussianDistributionNREstimation();
+                GraphicalGaussianDistributionIMLEstimation();
+                GraphicalGaussianDistributionIMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
+                GraphicalGaussianDistributionIMLEstimation(const GraphicalGaussianDistributionIMLEstimation& estimation);
+                virtual ~GraphicalGaussianDistributionIMLEstimation();
 
-                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                class STATISKIT_CORE_API CDEstimator : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
-                        Estimator();
-                        Estimator(const Estimator& estimator);
-                        virtual ~Estimator();
+                        CDEstimator();
+                        CDEstimator(const CDEstimator& estimator);
+                        virtual ~CDEstimator();
 
                         virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
                         virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
 
                         virtual void set_graph(const UndirectedGraph& graph);
+                };
+
+                class STATISKIT_CORE_API NREstimator : public CDEstimator
+                {
+                    public:
+                        NREstimator();
+                        NREstimator(const NREstimator& estimator);
+                        virtual ~NREstimator();
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
+
+                        linalg::solver_type get_solver() const;
+                        void set_solver(const linalg::solver_type& solver);
+
+                        double get_alpha() const;
+                        void set_alpha(const double& alpha);
+
+                        double get_beta() const;
+                        void set_beta(const double& beta);      
+
+                    protected:
+                        linalg::solver_type _solver;
+                        double _alpha;
+                        double _beta;
                 };
         };
     }
