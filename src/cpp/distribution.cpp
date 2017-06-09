@@ -5,6 +5,14 @@ namespace statiskit
 {
     namespace pgm
     {        
+        GraphicalGaussianDistribution::GraphicalGaussianDistribution(const Eigen::VectorXd& mu)
+        {
+            _mu = mu;
+            _theta = Eigen::MatrixXd::Identity(_mu.size(), _mu.size());
+            _cholesky = _theta;
+            _determinant = 1.;
+        }
+
         GraphicalGaussianDistribution::GraphicalGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& theta)
         {
             if(mu.size() != theta.rows())
@@ -19,6 +27,7 @@ namespace statiskit
         {
             _mu = gaussian._mu;
             _theta = gaussian._theta;
+            _cholesky = gaussian._cholesky;
             _determinant = gaussian._determinant;
         }
 
@@ -200,6 +209,12 @@ namespace statiskit
             for(Index index = 0, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             { submatrix(D, clique_tree.get_clique(index), clique_tree.get_clique(index), submatrix(X, clique_tree.get_clique(index), clique_tree.get_clique(index))); }
             Eigen::MatrixXd K = D.inverse();
+            GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
+            std::unique_ptr< MultivariateDistributionEstimation > estimation;
+            if(lazy)
+            { estimation = std::make_unique< LazyEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+            else
+            { estimation = std::make_unique< GraphicalGaussianDistributionMLEstimation >(estimated, &data); }
             for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             {
                 submatrix(K,
@@ -236,7 +251,7 @@ namespace statiskit
                                         clique_tree.get_clique(index),
                                         clique_tree.get_separator(index)));
             }
-            std::unique_ptr< GraphicalGaussianDistributionMLEstimation > estimation = std::make_unique< GraphicalGaussianDistributionMLEstimation >(new GraphicalGaussianDistribution(mean_estimation->get_mean(), K), &data);
+            estimated->set_theta(K);
             return std::move(estimation);
         }
 
@@ -276,6 +291,106 @@ namespace statiskit
         GraphicalGaussianDistributionIMLEstimation::CDEstimator::~CDEstimator()
         {}
 
+        // std::unique_ptr< MultivariateDistributionEstimation > GraphicalGaussianDistributionIMLEstimation::CDEstimator::operator() (const MultivariateData& data, const bool& lazy) const
+        // {
+        //     if(!_graph)
+        //     { throw member_error("graph", "you must give a graph to infer a graphical Gaussian distribution"); }
+        //     const MultivariateSampleSpace* sample_space = data.get_sample_space();
+        //     if(_graph->get_nb_vertices() != sample_space->size())
+        //     { throw parameter_error("data", "must have the same number of components as the number of vertices in the given graph"); }
+        //     for(Index index = 0, max_index = sample_space->size(); index < max_index; ++index)
+        //     {
+        //         if(sample_space->get(index)->get_outcome() != CONTINUOUS)
+        //         { throw sample_space_error(CONTINUOUS); }
+        //     }
+        //     NaturalMeanVectorEstimation::Estimator mean_estimator = NaturalMeanVectorEstimation::Estimator();
+        //     std::unique_ptr< MeanVectorEstimation > mean_estimation = mean_estimator(data);
+        //     NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
+        //     std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
+        //     Eigen::MatrixXd S = covariance_estimation->get_covariance();
+        //     Eigen::MatrixXd K = S.diagonal().cwiseInverse().asDiagonal();
+        //     double determinant = K.determinant();
+        //     double prev, curr = log(determinant) - (K * S).trace();
+        //     unsigned int its = 0;
+        //     double max;
+        //     std::unique_ptr< MultivariateDistributionEstimation > estimation;
+        //     GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
+        //     if(lazy)
+        //     { estimation = std::make_unique< LazyEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+        //     else
+        //     { estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(estimated, &data); }
+        //     do
+        //     {
+        //         prev = curr;
+        //         max = -1 * std::numeric_limits< double >::infinity();
+        //         unsigned int argmax = 0;
+        //         Index q = 0;
+        //         Eigen::MatrixXd Kinv = K.inverse();
+        //         std::cout << its << std::endl;
+        //         std::pair< Index, Index > edge;
+        //         for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
+        //         {
+        //             const Neighbours& ne = _graph->neighbours(u);
+        //             for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+        //             {
+        //                 double derivative = std::abs(S(u, *itv) - Kinv(u, *itv));
+        //                 if(*itv < u && derivative > max)
+        //                 {
+        //                     max = derivative;
+        //                     argmax = q;
+        //                     edge = std::make_pair(u, *itv);
+        //                 }
+        //                 ++q;
+        //             }
+        //             if(its > 0)
+        //             {
+        //                 double derivative = std::abs(S(u, u) - Kinv(u, u));
+        //                 if(derivative > max)
+        //                 {
+        //                     max = derivative;
+        //                     argmax = q;
+        //                     edge = std::make_pair(u, u);
+        //                 }
+        //             }
+        //             ++q;
+        //         }
+        //         double rho = Kinv(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
+        //         double rhobar = S(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
+        //         double s = pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), - 1 / 2.);
+        //         if(rho <= -1)
+        //         { s *= (1 + rhobar) / (2 * rhobar); }
+        //         else if(rho >= 1)
+        //         { s *= (1 - rhobar) / (2 * rhobar); }
+        //         else
+        //         {
+        //             double discriminant = sqrt(pow(1 - pow(rho, 2) + 2 * rho * rhobar, 2) - 4 * rhobar * pow(1 - rho, 2) * (rho - rhobar));
+        //             std::pair< double, double > roots((1 - pow(rho, 2) + 2 * rho * rhobar - discriminant) / (2 * rhobar * (1 - pow(rho, 2.))),
+        //                                               (1 - pow(rho, 2) + 2 * rho * rhobar + discriminant) / (2 * rhobar * (1 - pow(rho, 2.))));
+        //             if(rhobar < 0.)
+        //             { s *= std::max(roots.first, roots.second); }
+        //             else if(rhobar > 0.)
+        //             { s *= std::min(roots.first, roots.second); }
+        //             else
+        //             { s *= roots.first; }
+        //         }
+        //         if(K(edge.first, edge.second) != 0)
+        //         { max = std::abs(s / K(edge.first, edge.second)); }
+        //         else
+        //         { max = std::abs(s); }
+        //         K(edge.first, edge.second) += s;
+        //         K(edge.second, edge.first) += s;
+        //         determinant = K.determinant();
+        //         curr = log(determinant) - (K * S).trace();
+        //         std::cout << edge.first << " -- " << edge.second << ": " << max << "(" << prev << " against " << curr << " with " << std::abs((S(edge.first, edge.second) - Kinv(edge.first, edge.second)) / S(edge.first, edge.second)) << ")" << std::endl;
+        //         if(!lazy)
+        //         { static_cast< GraphicalGaussianDistributionIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
+        //         ++its;
+        //     } while(run(its, max, _graph->get_nb_edges()));
+        //     std::cout << "done" << std::endl;
+        //     estimated->set_theta(K);
+        //     return std::move(estimation);
+        // }
+
         std::unique_ptr< MultivariateDistributionEstimation > GraphicalGaussianDistributionIMLEstimation::CDEstimator::operator() (const MultivariateData& data, const bool& lazy) const
         {
             if(!_graph)
@@ -288,175 +403,70 @@ namespace statiskit
                 if(sample_space->get(index)->get_outcome() != CONTINUOUS)
                 { throw sample_space_error(CONTINUOUS); }
             }
-            std::cout << std::endl;
             NaturalMeanVectorEstimation::Estimator mean_estimator = NaturalMeanVectorEstimation::Estimator();
             std::unique_ptr< MeanVectorEstimation > mean_estimation = mean_estimator(data);
             NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
-            std::cout << "S" << std::endl;
             std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
             Eigen::MatrixXd S = covariance_estimation->get_covariance();
-            std::cout << S << std::endl;
-            unsigned int q = _graph->get_nb_edges() + _graph->get_nb_vertices();
-            Eigen::VectorXd x = Eigen::VectorXd::Zero(q);
-            std::vector< Index > I(q), J(q);
-            Eigen::MatrixXd E0 = Eigen::MatrixXd::Zero(_graph->get_nb_vertices(), q), E1 = Eigen::MatrixXd::Zero(_graph->get_nb_vertices(), q);
-            q = 0;
-            Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_graph->get_nb_vertices(), _graph->get_nb_vertices());
-            for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
-            {
-                const Neighbours& ne = _graph->neighbours(u);
-                for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
-                {
-                    if(*itv < u)
-                    {
-                        I[q] = u;
-                        J[q] = *itv;
-                        E0(u, q) = 1;
-                        E1(*itv, q) = 1;
-                        ++q;
-                    }
-                    // if(S(u, *itv) < 0)
-                    // {
-                    //     K(u, *itv) = -1e-6;
-                    //     K(*itv, u) = -1e-6;
-                    // }
-                    // else
-                    // {
-                    //     K(u, *itv) = 1e-6;
-                    //     K(*itv, u) = 1e-6;
-                    // }
-                }
-                I[q] = u;
-                J[q] = u;
-                E0(u, q) = 1;
-                E1(u, q) = 1;
-                x(q) = 1. / (2 * S(u, u));
-                K(u, u) = 2 * x(q);
-                ++q;
-            }
+            Eigen::MatrixXd K = S.diagonal().cwiseInverse().asDiagonal();
             double determinant = K.determinant();
-            double prev, curr = -log(determinant) + (K * S).trace();
+            double prev, curr = log(determinant) - (K * S).trace();
             unsigned int its = 0;
-            std::unique_ptr< GraphicalGaussianDistributionIMLEstimation > estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(nullptr, &data);
-            // Eigen::VectorXd delta = Eigen::VectorXd::Zero(q);
-            double s;
-            Eigen::MatrixXd Kinv = K.inverse();
-            q = 0;
-            std::pair< Index, Index > edge;
-            // for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
-            // {
-            //     const Neighbours& ne = _graph->neighbours(u);
-            //     for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
-            //     {
-            //         edge = std::make_pair(u, *itv);
-            //         double rhobar = S(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
-            //         double discriminant = sqrt(4 * pow(rhobar, 2));
-            //         std::pair< double, double > roots((- 1 - discriminant) / (2 * rhobar),
-            //                                           (- 1 + discriminant) / (2 * rhobar));
-            //         if(rhobar < 0.)
-            //         { s = std::max(roots.first, roots.second); }
-            //         else if(rhobar > 0.)
-            //         { s = std::min(roots.first, roots.second); }
-            //         else
-            //         { s = roots.first; }
-            //         s /= pow(S(edge.first, edge.first) * S(edge.second, edge.second), 1 / 2.);
-            //         K += s * (E0.col(q) * E1.col(q).transpose() + E1.col(q) * E0.col(q).transpose());
-            //         ++q;
-            //     }
-            //     edge = std::make_pair(u, u);
-            //     double rhobar = S(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
-            //     double discriminant = sqrt(4 * pow(rhobar, 2));
-            //     std::pair< double, double > roots((- 1 - discriminant) / (2 * rhobar),
-            //                                       (- 1 + discriminant) / (2 * rhobar));
-            //     if(rhobar < 0.)
-            //     { s = std::max(roots.first, roots.second); }
-            //     else if(rhobar > 0.)
-            //     { s = std::min(roots.first, roots.second); }
-            //     else
-            //     { s = roots.first; }
-            //     s /= pow(S(edge.first, edge.first) * S(edge.second, edge.second), 1 / 2.);
-            //     K += s * (E0.col(q) * E1.col(q).transpose() + E1.col(q) * E0.col(q).transpose());
-            //     ++q;
-            // }
+            double max;
+            std::unique_ptr< MultivariateDistributionEstimation > estimation;
+            GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
+            if(lazy)
+            { estimation = std::make_unique< LazyEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+            else
+            { estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(estimated, &data); }
             do
             {
-                double max = -1 * std::numeric_limits< double >::infinity();
-                unsigned int argmax = 0;
-                q = 0;
-                Kinv = K.inverse();
-                std::cout << "Kinv:" << std::endl;
+                prev = curr;
+                std::cout << its << std::endl;
                 for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
                 {
-                    const Neighbours& ne = _graph->neighbours(u);
+                    Neighbours ne = _graph->neighbours(u);
+                    ne.insert(u);
                     for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                     {
-                        double derivative = fabs(S(u, *itv) - Kinv(u, *itv));
-                        std::cout << u << " -- " << *itv << " : " << derivative << std::endl;
-                        if(*itv < u && derivative > max)
+                        if(*itv <= u)
                         {
-                            max = derivative;
-                            argmax = q;
-                            edge = std::make_pair(u, *itv);
+                            Eigen::MatrixXd Kinv = K.inverse();
+                            double rho = Kinv(u, *itv) / pow(Kinv(u, u) * Kinv(*itv, *itv), 1 / 2.);
+                            double rhobar = S(u, *itv) / pow(Kinv(u, u) * Kinv(*itv, *itv), 1 / 2.);
+                            double s = pow(Kinv(u, u) * Kinv(*itv, *itv), - 1 / 2.);
+                            if(rho <= -1)
+                            { s *= (1 + rhobar) / (2 * rhobar); }
+                            else if(rho >= 1)
+                            { s *= (1 - rhobar) / (2 * rhobar); }
+                            else
+                            {
+                                double discriminant = sqrt(pow(1 - pow(rho, 2) + 2 * rho * rhobar, 2) - 4 * rhobar * pow(1 - rho, 2) * (rho - rhobar));
+                                std::pair< double, double > roots((1 - pow(rho, 2) + 2 * rho * rhobar - discriminant) / (2 * rhobar * (1 - pow(rho, 2.))),
+                                                                  (1 - pow(rho, 2) + 2 * rho * rhobar + discriminant) / (2 * rhobar * (1 - pow(rho, 2.))));
+                                if(rhobar < 0.)
+                                { s *= std::max(roots.first, roots.second); }
+                                else if(rhobar > 0.)
+                                { s *= std::min(roots.first, roots.second); }
+                                else
+                                { s *= roots.first; }
+                            }
+                            K(u, *itv) += s;
+                            K(*itv, u) += s;
                         }
-                        ++q;
                     }
-                    if(its > 0)
-                    {
-                        double derivative = fabs(S(u, u) - Kinv(u, u));
-                        std::cout << u << " -- " << u << " : " << derivative << std::endl;
-                        if(derivative > max)
-                        {
-                            max = derivative;
-                            argmax = q;
-                            edge = std::make_pair(u, u);
-                        }
-                    }
-                    ++q;
                 }
-                std::cout << "edge: " << edge.first << " " << edge.second << std::endl;
-                double rho = Kinv(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
-                double rhobar = S(edge.first, edge.second) / pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
-                if(rho <= -1)
-                { s = (1 + rhobar) / (2 * rhobar); }
-                else if(rho >= 1)
-                { s = (1 - rhobar) / (2 * rhobar); }
-                else
-                {
-                    std::cout << "rho: " << rho << " and rhobar: " << rhobar << std::endl;
-                    double discriminant = sqrt(pow(1 - pow(rho, 2) + 2 * rho * rhobar, 2) - 4 * rhobar * pow(1 - rho, 2) * (rho - rhobar));
-                    std::cout << "disc: " << discriminant << std::endl;
-                    std::pair< double, double > roots((1 - pow(rho, 2) + 2 * rho * rhobar - discriminant) / (2 * rhobar * (1 - pow(rho, 2.))),
-                                                      (1 - pow(rho, 2) + 2 * rho * rhobar + discriminant) / (2 * rhobar * (1 - pow(rho, 2.))));
-                    if(rhobar < 0.)
-                    { s = std::max(roots.first, roots.second); }
-                    else if(rhobar > 0.)
-                    { s = std::min(roots.first, roots.second); }
-                    else
-                    { s = roots.first; }
-                }
-                std::cout << "s: " << s << std::endl;
-                s /= pow(Kinv(edge.first, edge.first) * Kinv(edge.second, edge.second), 1 / 2.);
-                std::cout << "s: " << s << std::endl;
-                std::cout << "delta:" << std::endl;
-                // std::cout << (E0.col(argmax) * E1.col(argmax).transpose() + E1.col(argmax) * E0.col(argmax).transpose()) << std::endl;
-                // K += s * (E0.col(argmax) * E1.col(argmax).transpose() + E1.col(argmax) * E0.col(argmax).transpose());
-                K(edge.first, edge.second) += s;
-                K(edge.second, edge.first) += s;
-            std::cout << "K" << std::endl;
-            std::cout << K << std::endl;
-            std::cout << "Kinv" << std::endl;
-            std::cout << K.inverse() << std::endl;
-                estimation->_iterations.push_back(K);
+                determinant = K.determinant();
+                curr = log(determinant) - (K * S).trace();
+                std::cout << prev << " against " << curr << std::endl;
+                if(!lazy)
+                { static_cast< GraphicalGaussianDistributionIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
                 ++its;
-            } while(run(its, s));
-            std::cout << "Kinv" << std::endl;
-            std::cout << K.inverse() << std::endl;
+            } while(run(its, __impl::reldiff(prev, curr)) && prev < curr);
             std::cout << "done" << std::endl;
-            // K = E0 * x.asDiagonal() * E1.transpose() + E1 * x.asDiagonal() * E0.transpose();
-            estimation->_estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean(), K);
+            estimated->set_theta(K);
             return std::move(estimation);
         }
-
         std::unique_ptr< MultivariateDistributionEstimation::Estimator > GraphicalGaussianDistributionIMLEstimation::CDEstimator::copy() const
         { return std::make_unique< CDEstimator >(*this); }
 
@@ -508,6 +518,12 @@ namespace statiskit
             q = 0;
             std::cout << "K" << std::endl;
             Eigen::MatrixXd K = Eigen::MatrixXd::Zero(_graph->get_nb_vertices(), _graph->get_nb_vertices());
+            std::unique_ptr< MultivariateDistributionEstimation > estimation;
+            GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
+            if(lazy)
+            { estimation = std::make_unique< LazyEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+            else
+            { estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(estimated, &data); }
             for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
             {
                 const Neighbours& ne = _graph->neighbours(u);
@@ -536,14 +552,14 @@ namespace statiskit
             double prev, curr = -log(determinant) + (K * S).trace();
             // std::cout << Kc << std::endl << std::endl;
             unsigned int its = 0;
-            std::unique_ptr< GraphicalGaussianDistributionIMLEstimation > estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(nullptr, &data);
             Eigen::VectorXd delta = Eigen::VectorXd::Zero(q);
             do
             {
                 prev = curr;
                 x +=  delta;
                 std::cout << "push" << std::endl;
-                estimation->_iterations.push_back(K);
+                if(!lazy)
+                { static_cast< GraphicalGaussianDistributionIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
                 std::cout << "Kinv" << std::endl;
                 Eigen::MatrixXd Kinv = K.inverse();
                 std::cout << "s" << std::endl;
@@ -567,12 +583,15 @@ namespace statiskit
                     { cont = curr > prev - _alpha * s.transpose() * delta; }
                     std::cout << curr << " against " << prev - _alpha * s.transpose() * delta << ": " << cont << " (" << delta.norm() << ")" << std::endl;
                 } while(cont && run(its + dump, delta.norm()));
+
                 std::cout << dump << std::endl;
                 // std::cout << delta << std::endl;
                 ++its;
             } while(run(its, delta.norm()));
             K = E0 * x.asDiagonal() * E1.transpose() + E1 * x.asDiagonal() * E0.transpose();
-            estimation->_estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean(), K);
+            if(!lazy)
+            { static_cast< GraphicalGaussianDistributionIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
+            estimated->set_theta(K);
             return std::move(estimation);
         }
 

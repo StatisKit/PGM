@@ -15,6 +15,7 @@ namespace statiskit
         class STATISKIT_PGM_API GraphicalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, GraphicalGaussianDistribution, ContinuousMultivariateDistribution >
         {
             public:
+                GraphicalGaussianDistribution(const Eigen::VectorXd& mu);
                 GraphicalGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& sigma);
                 GraphicalGaussianDistribution(const GraphicalGaussianDistribution& gaussian);
                 virtual ~GraphicalGaussianDistribution();
