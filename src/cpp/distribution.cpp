@@ -283,10 +283,10 @@ namespace statiskit
         {}
 
         GraphicalGaussianDistributionIMLEstimation::CDEstimator::CDEstimator() : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator()
-        {}
+        { _inverser = linalg::solver_type::llt; }
 
         GraphicalGaussianDistributionIMLEstimation::CDEstimator::CDEstimator(const CDEstimator& estimator) : OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator(estimator)
-        {}
+        { _inverser = estimator._inverser; }
 
         GraphicalGaussianDistributionIMLEstimation::CDEstimator::~CDEstimator()
         {}
@@ -431,7 +431,7 @@ namespace statiskit
                     {
                         if(*itv <= u)
                         {
-                            Eigen::MatrixXd Kinv = K.inverse();
+                            Eigen::MatrixXd Kinv = inverse(K, _inverser);
                             double rho = Kinv(u, *itv) / pow(Kinv(u, u) * Kinv(*itv, *itv), 1 / 2.);
                             double rhobar = S(u, *itv) / pow(Kinv(u, u) * Kinv(*itv, *itv), 1 / 2.);
                             double s = pow(Kinv(u, u) * Kinv(*itv, *itv), - 1 / 2.);
@@ -467,6 +467,13 @@ namespace statiskit
             estimated->set_theta(K);
             return std::move(estimation);
         }
+
+        const statiskit::linalg::solver_type& GraphicalGaussianDistributionIMLEstimation::CDEstimator::get_inverser() const
+        { return _inverser; }
+
+        void GraphicalGaussianDistributionIMLEstimation::CDEstimator::set_inverser(const statiskit::linalg::solver_type& inverser)
+        { _inverser = inverser; }
+
         std::unique_ptr< MultivariateDistributionEstimation::Estimator > GraphicalGaussianDistributionIMLEstimation::CDEstimator::copy() const
         { return std::make_unique< CDEstimator >(*this); }
 

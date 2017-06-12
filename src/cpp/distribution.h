@@ -91,9 +91,15 @@ namespace statiskit
 
                         virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
+                        const statiskit::linalg::solver_type& get_inverser() const;
+                        void set_inverser(const statiskit::linalg::solver_type& inverser);
+
                         virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
 
                         virtual void set_graph(const UndirectedGraph& graph);
+
+                    protected:
+                        statiskit::linalg::solver_type _inverser;
                 };
 
                 class STATISKIT_CORE_API NREstimator : public CDEstimator
