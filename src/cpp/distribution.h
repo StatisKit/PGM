@@ -74,7 +74,7 @@ namespace statiskit
                 };
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistributionIMLEstimation : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        class STATISKIT_PGM_API GraphicalGaussianDistributionIMLEstimation : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
         {
             public:
                 GraphicalGaussianDistributionIMLEstimation();
@@ -82,19 +82,16 @@ namespace statiskit
                 GraphicalGaussianDistributionIMLEstimation(const GraphicalGaussianDistributionIMLEstimation& estimation);
                 virtual ~GraphicalGaussianDistributionIMLEstimation();
 
-                class STATISKIT_CORE_API CDEstimator : public OptimizationEstimation< Eigen::MatrixXd, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+
+                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
-                        CDEstimator();
-                        CDEstimator(const CDEstimator& estimator);
-                        virtual ~CDEstimator();
-
-                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
+                        Estimator();
+                        Estimator(const Estimator& estimator);
+                        virtual ~Estimator();
 
                         const statiskit::linalg::solver_type& get_inverser() const;
                         void set_inverser(const statiskit::linalg::solver_type& inverser);
-
-                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
 
                         virtual void set_graph(const UndirectedGraph& graph);
 
@@ -102,7 +99,18 @@ namespace statiskit
                         statiskit::linalg::solver_type _inverser;
                 };
 
-                class STATISKIT_CORE_API NREstimator : public CDEstimator
+                struct STATISKIT_CORE_API CDEstimator : public Estimator
+                {
+                    CDEstimator();
+                    CDEstimator(const CDEstimator& estimator);
+                    virtual ~CDEstimator();
+
+                    virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
+
+                    virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
+                };
+
+                class STATISKIT_CORE_API NREstimator : public Estimator
                 {
                     public:
                         NREstimator();
@@ -128,7 +136,49 @@ namespace statiskit
                         double _beta;
                 };
         };
+
+        class STATISKIT_PGM_API GraphicalGaussianDistributionSIMLEstimation : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        {
+            public:
+                GraphicalGaussianDistributionSIMLEstimation();
+                GraphicalGaussianDistributionSIMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
+                GraphicalGaussianDistributionSIMLEstimation(const GraphicalGaussianDistributionSIMLEstimation& estimation);
+                virtual ~GraphicalGaussianDistributionSIMLEstimation();
+
+                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                {
+                    public:
+                        Estimator();
+                        Estimator(const Estimator& estimator);
+                        virtual ~Estimator();
+
+                        const statiskit::linalg::sparse_solver_type& get_inverser() const;
+                        void set_inverser(const statiskit::linalg::sparse_solver_type& inverser);
+
+                        virtual void set_graph(const UndirectedGraph& graph);
+
+                    protected:
+                        statiskit::linalg::sparse_solver_type _inverser;
+                };
+
+                class STATISKIT_CORE_API CDEstimator : public Estimator
+                {
+                    public:
+                        CDEstimator();
+                        CDEstimator(const CDEstimator& estimator);
+                        virtual ~CDEstimator();
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
+
+                    protected:
+
+                        template<class M> std::unique_ptr< MultivariateDistributionEstimation > compute(const MultivariateData& data, const bool& lazy) const;
+                };
+        };
     }
 }
 
+#include "distribution.hpp"
 #endif

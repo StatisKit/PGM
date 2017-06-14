@@ -39,7 +39,7 @@ void wrapper_dc0ca5adebf159fdb8131fd1e3715a8c()
     void  (::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::*method_pointer_587147d5ec22589a9742e271b369d5e7)(double const &) = &::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::set_alpha;
     double  (::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::*method_pointer_4686fd5a3abf53d3915dd95d37c76b29)() const = &::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::get_beta;
     void  (::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::*method_pointer_e561f1ff1980517bb4411695e5d8c590)(double const &) = &::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator::set_beta;
-    boost::python::class_< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator, autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator >::Type, boost::python::bases< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::CDEstimator > > class_dc0ca5adebf159fdb8131fd1e3715a8c("NREstimator", "", boost::python::no_init);
+    boost::python::class_< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator, autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator >::Type, boost::python::bases< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::Estimator > > class_dc0ca5adebf159fdb8131fd1e3715a8c("NREstimator", "", boost::python::no_init);
     class_dc0ca5adebf159fdb8131fd1e3715a8c.def(boost::python::init<  >(""));
     class_dc0ca5adebf159fdb8131fd1e3715a8c.def(boost::python::init< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator const & >(""));
     class_dc0ca5adebf159fdb8131fd1e3715a8c.def("get_solver", method_pointer_e667d44434c853ea9d9767549a7e6987, "");
@@ -51,7 +51,7 @@ void wrapper_dc0ca5adebf159fdb8131fd1e3715a8c()
 
     if(autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator >::is_class)
     {
-        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator >::Type, autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::CDEstimator >::Type >();
+        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::NREstimator >::Type, autowig::Held< class ::statiskit::pgm::GraphicalGaussianDistributionIMLEstimation::Estimator >::Type >();
     }
 
 }
