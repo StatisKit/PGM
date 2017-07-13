@@ -10,12 +10,12 @@ from nose.plugins.attrib import attr
       osx=True,
       win=True,
       level=1)
-class TestErdosRenyiUndirectedGraphDistribution(unittest.TestCase):
+class TestErdosRenyiUndirectedGraphProcess(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         """Test Erdos-Renyi undirected graph distribution construction"""
-        cls._dist = pgm.UndirectedGraphDistribution("Erdos-Renyi", nb_vertices=2, pi=0.5)
+        cls._dist = pgm.UndirectedGraphProcess("Erdos-Renyi", nb_vertices=2, pi=0.5)
 
     def test_pdf_ldf(self):
         """Test Erdos-Renyi undirected graph distribution ldf"""

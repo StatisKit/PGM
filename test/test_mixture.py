@@ -10,12 +10,12 @@ from nose.plugins.attrib import attr
       osx=True,
       win=True,
       level=1)
-class TestMixtureUndirectedGraphDistribution(unittest.TestCase):
+class TestMixtureUndirectedGraphProcess(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         """Test mixture undirected graph distribution construction"""
-        cls._dist = pgm.UndirectedGraphDistribution("mixture", nb_vertices=2, nb_states=2)
+        cls._dist = pgm.UndirectedGraphProcess("mixture", nb_vertices=2, nb_states=2)
 
     # def test_pdf_ldf(self):
     #     """Test mixture undirected graph distribution ldf"""

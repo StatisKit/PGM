@@ -59,17 +59,20 @@ class TestUndirectedGraph(unittest.TestCase):
                                                    [0.0, 1.0, 0.0, 1.0],
                                                    [1.0, 0.0, 1.0, 0.0]]))
         self.assertFalse(graph.is_chordal)
+        self.assertTrue(graph.maximum_cardinality_embedding(True).is_chordal)
+        self.assertTrue(graph.maximum_cardinality_embedding(False).is_chordal)
 
-    def test_junction_tree(self):
-        """Test undirected graph junction tree"""
-        graph = self._graph.junction_tree()
-        self.assertEqual(str(graph), """[0.0, 1.0, 0.0]
-[1.0, 0.0, 0.0]
-[0.0, 0.0, 0.0]""")
-        cliques = ["{0, 1, 2}", "{2, 3}", "{4}"]
-        for v in range(graph.nb_vertices):
-            self.assertEqual(str(graph.vertex_properties[v]), cliques[v])
-        self.assertEqual(str(graph.edge_properties[0, 1]), "{2}")
+
+    def test_clique_tree(self):
+        """Test undirected graph clique tree"""
+        graph = self._graph.clique_tree()
+        self.assertEqual(graph.nb_cliques, 3)
+        cliques = ["{4}", "{2, 3}", "{0, 1}"]
+        for c in range(len(graph.cliques)):
+            self.assertEqual(str(graph.cliques[c]), cliques[c])
+        separators = ["{}", "{}", "{2}"]
+        for s in range(len(graph.separators)):
+            self.assertEqual(str(graph.separators[s]), separators[s])
 
     def test_read_write_dot(self):
         """Test undirected graph read & write methods with DOT format"""
