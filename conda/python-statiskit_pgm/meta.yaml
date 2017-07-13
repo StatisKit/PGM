@@ -32,6 +32,7 @@ test:
     - python-dev
     - matplotlib
     - numpy
+    - pydotplus
   # imports:
   #   - statiskit.core
   source_files:                                
