@@ -457,7 +457,7 @@ namespace statiskit
             double determinant = K.determinant();
             double prev, curr = -log(determinant) + (K * S).trace();
             unsigned int its = 0;
-            Eigen::VectorXd delta = Eigen::VectorXd::Zero(q); nbbbbbbbbbbbbcv
+            Eigen::VectorXd delta = Eigen::VectorXd::Zero(q);
             do
             {
                 prev = curr;
