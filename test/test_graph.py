@@ -67,7 +67,7 @@ class TestUndirectedGraph(unittest.TestCase):
         """Test undirected graph clique tree"""
         graph = self._graph.clique_tree()
         self.assertEqual(graph.nb_cliques, 3)
-        cliques = ["{4}", "{2, 3}", "{0, 1}"]
+        cliques = ["{4}", "{0, 1, 2}", "{2, 3}"]
         for c in range(len(graph.cliques)):
             self.assertEqual(str(graph.cliques[c]), cliques[c])
         separators = ["{}", "{}", "{2}"]
