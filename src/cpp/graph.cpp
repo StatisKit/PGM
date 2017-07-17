@@ -398,9 +398,7 @@ namespace statiskit
             Indices colored = _cliques[0], diff, inter;
             for(Index u = 1, v = cliques.size(); u < v; ++u)
             {
-                diff.clear();
-                std::set_difference(cliques[order[u]].begin(), cliques[order[u]].end(), colored.begin(), colored.end(), std::inserter(diff, diff.begin()));
-                _cliques[u] = diff;
+                _cliques[u] = cliques[order[u]];
                 inter.clear();
                 std::set_intersection(cliques[order[u]].begin(), cliques[order[u]].end(), colored.begin(), colored.end(), std::inserter(inter, inter.begin()));
                 _separators[u] = inter;

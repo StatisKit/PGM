@@ -175,39 +175,71 @@ namespace statiskit
             std::unique_ptr< MeanVectorEstimation > mean_estimation = mean_estimator(data);
             NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
             std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
-            Eigen::MatrixXd S = covariance_estimation->get_covariance();
+            Eigen::MatrixXd Sigma = covariance_estimation->get_covariance();
             CliqueTree clique_tree = CliqueTree(*_graph);
-            Eigen::MatrixXd X = S;
-            for(Index index = clique_tree.get_nb_cliques(), min_index = 1; index > min_index; --index)
-            {
-                submatrix(X,
-                          clique_tree.get_separator(index - 1),
-                          clique_tree.get_clique(index - 1), 
-                          submatrix(X,
-                                    clique_tree.get_separator(index - 1),
-                                    clique_tree.get_clique(index - 1))
-                              * submatrix(X,
-                                          clique_tree.get_clique(index - 1),
-                                          clique_tree.get_clique(index - 1)).inverse());
-                submatrix(X,
-                          clique_tree.get_separator(index - 1),
-                          clique_tree.get_separator(index - 1),
-                          submatrix(X,
-                                    clique_tree.get_separator(index - 1),
-                                    clique_tree.get_separator(index - 1))
-                             - submatrix(X,
-                                         clique_tree.get_separator(index - 1),
-                                         clique_tree.get_clique(index - 1))
-                             * submatrix(X,
-                                         clique_tree.get_clique(index - 1),
-                                         clique_tree.get_clique(index - 1)).inverse()
-                             * submatrix(X,
-                                         clique_tree.get_separator(index - 1),
-                                         clique_tree.get_clique(index - 1)).transpose());  
-            }
-            Eigen::MatrixXd D = Eigen::MatrixXd::Zero(X.rows(), X.cols());
+            std::vector< Indices > U = std::vector< Indices >(clique_tree.get_nb_cliques(), Indices()), S = std::vector< Indices >(clique_tree.get_nb_cliques(), Indices());
             for(Index index = 0, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
-            { submatrix(D, clique_tree.get_clique(index), clique_tree.get_clique(index), submatrix(X, clique_tree.get_clique(index), clique_tree.get_clique(index))); }
+            { S[index] = clique_tree.get_clique(index); }
+            for(Index index = 0, max_index = clique_tree.get_nb_cliques() - 1; index < max_index; ++index)
+            {
+                Indices diff;
+                std::set_difference(S[index + 1].begin(), S[index + 1].end(), S[index].begin(), S[index].end(), std::inserter(diff, diff.begin()));
+                S[index + 1] = diff;
+                U[index + 1] = clique_tree.get_separator(index);
+            }
+            // Eigen::MatrixXd X = Sigma;
+            // for(Index index = clique_tree.get_nb_cliques(), min_index = 1; index > min_index; --index)
+            // {
+            //     submatrix(X,
+            //               U[index - 1],
+            //               S[index - 1],
+            //               submatrix(X,
+            //                         U[index - 1], //clique_tree.get_separator(index - 1),
+            //                         S[index - 1]) //clique_tree.get_clique(index - 1))
+            //                   * submatrix(X,
+            //                               S[index - 1], //clique_tree.get_clique(index - 1),
+            //                               S[index - 1]).inverse());//clique_tree.get_clique(index - 1)).inverse());
+            //     submatrix(X,
+            //               U[index - 1], //clique_tree.get_separator(index - 1),
+            //               U[index - 1], //clique_tree.get_separator(index - 1),
+            //               submatrix(X,
+            //                         U[index - 1], //clique_tree.get_separator(index - 1),
+            //                         U[index - 1])//clique_tree.get_separator(index - 1))
+            //                  - submatrix(X,
+            //                              U[index - 1], //clique_tree.get_separator(index - 1),
+            //                              S[index - 1])//clique_tree.get_clique(index - 1))
+            //                  * submatrix(X,
+            //                              S[index - 1], //clique_tree.get_clique(index - 1),
+            //                              S[index - 1]).inverse() //clique_tree.get_clique(index - 1)).inverse()
+            //                  * submatrix(X,
+            //                              U[index - 1], //clique_tree.get_separator(index - 1),
+            //                              S[index - 1]).transpose()); //clique_tree.get_clique(index - 1)).transpose());  
+            // }
+            Eigen::MatrixXd D = Eigen::MatrixXd::Zero(Sigma.rows(), Sigma.cols());
+            submatrix(D,
+                      S[0],
+                      S[0],
+                      submatrix(Sigma,
+                                S[0],
+                                S[0]));
+            for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
+            { 
+                submatrix(D,
+                          S[index], //clique_tree.get_clique(index),
+                          S[index], //clique_tree.get_clique(index),
+                          submatrix(Sigma,
+                                    S[index], //clique_tree.get_clique(index),
+                                    S[index])
+                          - submatrix(Sigma,
+                                      S[index],
+                                      U[index])
+                          * submatrix(Sigma,
+                                      U[index],
+                                      U[index]).inverse()
+                          * submatrix(Sigma,
+                                      U[index],
+                                      S[index])); //clique_tree.get_clique(index)));
+            }
             Eigen::MatrixXd K = D.inverse();
             GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
             std::unique_ptr< MultivariateDistributionEstimation > estimation;
@@ -218,38 +250,38 @@ namespace statiskit
             for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             {
                 submatrix(K,
-                          clique_tree.get_clique(index),
-                          clique_tree.get_separator(index),
+                          S[index], //clique_tree.get_clique(index),
+                          U[index], //clique_tree.get_separator(index),
                           - submatrix(K,
-                                      clique_tree.get_clique(index),
-                                      clique_tree.get_clique(index))
-                            * submatrix(S,
-                                        clique_tree.get_clique(index),
-                                        clique_tree.get_separator(index))
-                            * submatrix(S,
-                                        clique_tree.get_separator(index),
-                                        clique_tree.get_separator(index)));
+                                      S[index], //clique_tree.get_clique(index),
+                                      S[index]) //clique_tree.get_clique(index))
+                          * submatrix(Sigma,
+                                      S[index], //clique_tree.get_clique(index),
+                                      U[index]) //clique_tree.get_separator(index))
+                          * submatrix(Sigma,
+                                      U[index], //clique_tree.get_separator(index),
+                                      U[index]).inverse());//clique_tree.get_separator(index)));
                 submatrix(K,
-                          clique_tree.get_separator(index),
-                          clique_tree.get_clique(index),
+                          U[index], //clique_tree.get_separator(index),
+                          S[index], //clique_tree.get_clique(index),
                           submatrix(K,
-                                    clique_tree.get_clique(index),
-                                    clique_tree.get_separator(index)).transpose());
+                                    S[index], //clique_tree.get_clique(index),
+                                    U[index]).transpose()); //clique_tree.get_separator(index)).transpose());
                 submatrix(K,
-                          clique_tree.get_separator(index),
-                          clique_tree.get_separator(index),
+                          U[index], //clique_tree.get_separator(index),
+                          U[index], //clique_tree.get_separator(index),
                           submatrix(K,
-                                    clique_tree.get_separator(index),
-                                    clique_tree.get_separator(index))
-                            + submatrix(K,
-                                        clique_tree.get_separator(index),
-                                        clique_tree.get_clique(index))
-                            * submatrix(K,
-                                        clique_tree.get_clique(index),
-                                        clique_tree.get_clique(index)).inverse()
-                            * submatrix(K,
-                                        clique_tree.get_clique(index),
-                                        clique_tree.get_separator(index)));
+                                    U[index], //clique_tree.get_separator(index),
+                                    U[index]) //clique_tree.get_separator(index))
+                          + submatrix(K,
+                                      S[index], //clique_tree.get_separator(index),
+                                      U[index]).transpose() //clique_tree.get_clique(index))
+                          * submatrix(K,
+                                      S[index], //clique_tree.get_clique(index),
+                                      S[index]).inverse() //clique_tree.get_clique(index)).inverse()
+                          * submatrix(K,
+                                      S[index], //clique_tree.get_clique(index),
+                                      U[index])); //clique_tree.get_separator(index)));
             }
             estimated->set_theta(K);
             return std::move(estimation);
