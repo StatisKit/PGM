@@ -33,3 +33,5 @@ __pgm.statiskit._OptimizationEstimation = (__pgm.statiskit._OptimizationEstimati
 # Define aliases
 __pgm.statiskit.pgm.Neighbours = statiskit.stl.__stl.std._UnorderedSet_d48105936d4f5d09a78d2aa9f878fdb8
 __pgm.std._Vector_58063898f8e0510f98fc387ce09f4ed6.ValueType = statiskit.stl.__stl.std._Set_476c1c1f206251dba7af53c48f3f6e42
+__pgm.statiskit._ActiveEstimation_6dcd105f87f3599a9a382af799035647.EstimatedType = __pgm.statiskit.pgm.GraphicalGaussianDistribution
+__pgm.statiskit._ActiveEstimation_cc9947bd715555bbb7af0e1fb5fc56f6.EstimatedType = __pgm.statiskit.pgm.GraphicalGaussianDistribution
