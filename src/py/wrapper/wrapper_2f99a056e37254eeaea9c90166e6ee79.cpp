@@ -33,14 +33,14 @@ void wrapper_2f99a056e37254eeaea9c90166e6ee79()
     boost::python::object module_c5364bf6a7375db8ba8ffc4938cdbf83(boost::python::handle<  >(boost::python::borrowed(PyImport_AddModule(name_c5364bf6a7375db8ba8ffc4938cdbf83.c_str()))));
     boost::python::scope().attr("_mixture_undirected_graph_process") = module_c5364bf6a7375db8ba8ffc4938cdbf83;
     boost::python::scope scope_c5364bf6a7375db8ba8ffc4938cdbf83 = module_c5364bf6a7375db8ba8ffc4938cdbf83;
-    boost::python::class_< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation, autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::Type, boost::python::bases< struct ::statiskit::PolymorphicCopy< struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation, class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation, struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation >, class ::statiskit::Optimization > > class_2f99a056e37254eeaea9c90166e6ee79("VariationalComputation", "", boost::python::no_init);
+    boost::python::class_< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation, autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::Type, boost::python::bases< struct ::statiskit::PolymorphicCopy< struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation, class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation, struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation >, class ::statiskit::Optimization< class ::statiskit::Estimator > > > class_2f99a056e37254eeaea9c90166e6ee79("VariationalComputation", "", boost::python::no_init);
     class_2f99a056e37254eeaea9c90166e6ee79.def(boost::python::init<  >(""));
     class_2f99a056e37254eeaea9c90166e6ee79.def(boost::python::init< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation const & >(""));
 
     if(autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::is_class)
     {
         boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::Type, autowig::Held< struct ::statiskit::PolymorphicCopy< struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation, class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation, struct ::statiskit::pgm::MixtureUndirectedGraphProcess::Computation > >::Type >();
-        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::Type, autowig::Held< class ::statiskit::Optimization >::Type >();
+        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::MixtureUndirectedGraphProcess::VariationalComputation >::Type, autowig::Held< class ::statiskit::Optimization< class ::statiskit::Estimator > >::Type >();
     }
 
 }

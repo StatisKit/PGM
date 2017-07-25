@@ -3,6 +3,7 @@
 
 #include <boost/random/uniform_01.hpp>
 #include <statiskit/core/distribution.h>
+#include <statiskit/core/estimation.h>
 #include "graph.h"
 
 namespace statiskit
@@ -11,14 +12,75 @@ namespace statiskit
     {
         struct STATISKIT_PGM_API UndirectedGraphProcess
         {
-            virtual ~UndirectedGraphProcess() = 0;
+            public:
+                enum walk_type {
+                    FREE,
+                    CHORDAL,
+                };
 
-            virtual double ldf(const UndirectedGraph* graph) const = 0;
-            virtual double pdf(const UndirectedGraph* graph) const;
+                struct STATISKIT_PGM_API RandomWalk
+                {
+                    virtual ~RandomWalk() = 0;
 
-            virtual std::unique_ptr< UndirectedGraph > simulate() const = 0;
+                    virtual void operator() () = 0;
+                    void operator() (const unsigned int& length);
 
-            virtual std::unique_ptr< UndirectedGraphProcess > copy() const = 0;
+                    virtual const UndirectedGraph* get_graph() const = 0;
+                    virtual void set_graph(const UndirectedGraph& graph) = 0;
+
+                    virtual std::unique_ptr< RandomWalk > copy() const = 0;
+                };
+
+                virtual ~UndirectedGraphProcess() = 0;
+
+                virtual double ldf(const UndirectedGraph* graph) const = 0;
+                virtual double pdf(const UndirectedGraph* graph) const;
+
+                virtual std::unique_ptr< UndirectedGraph > simulate() const = 0;
+
+                virtual std::unique_ptr< RandomWalk > random_walk(const walk_type& walk) const;
+
+                virtual std::unique_ptr< UndirectedGraphProcess > copy() const = 0;
+
+            protected:
+                class STATISKIT_PGM_API FreeRandomWalk : public RandomWalk
+                {
+                    public:
+                        class STATISKIT_PGM_API ChordalRandomWalk : public PolymorphicCopy< RandomWalk, ChordalRandomWalk >
+                        {
+                            public:
+                                ChordalRandomWalk(const FreeRandomWalk& walk);
+                                ChordalRandomWalk(const ChordalRandomWalk& walk);
+                                virtual ~ChordalRandomWalk();
+
+                                virtual void operator() ();
+
+                                virtual const UndirectedGraph* get_graph() const;
+                                virtual void set_graph(const UndirectedGraph& graph);
+
+                                bool get_unique() const;
+                                void set_unique(const bool& unique);
+
+                                unsigned int get_maxits() const;
+                                void set_maxits(const unsigned int& maxits);
+
+                            protected:
+                                FreeRandomWalk* _walk;
+                                bool _unique;
+                                unsigned int _maxits;
+                        };
+
+                        FreeRandomWalk();
+                        virtual ~FreeRandomWalk();
+
+                        virtual const UndirectedGraph* get_graph() const;
+                        virtual void set_graph(const UndirectedGraph& graph);
+
+                    protected:
+                        UndirectedGraph* _graph;
+                };
+
+                virtual std::unique_ptr< FreeRandomWalk > free_random_walk() const = 0;
         };
 
         class STATISKIT_PGM_API ErdosRenyiUndirectedGraphProcess : public PolymorphicCopy< UndirectedGraphProcess, ErdosRenyiUndirectedGraphProcess >
@@ -39,8 +101,23 @@ namespace statiskit
                 void set_pi(const double& pi);
 
             protected:
+                class FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
+                {
+                    public:
+                        FreeRandomWalk(const ErdosRenyiUndirectedGraphProcess* process);
+                        FreeRandomWalk(const FreeRandomWalk& walk);
+                        virtual ~FreeRandomWalk();
+
+                        virtual void operator() ();
+
+                    protected:
+                        const ErdosRenyiUndirectedGraphProcess* _process;
+                };
+
                 Index _nb_vertices;
                 double _pi;
+
+                std::unique_ptr< UndirectedGraphProcess::FreeRandomWalk > free_random_walk() const;
         };
 
         class STATISKIT_PGM_API MixtureUndirectedGraphProcess : public PolymorphicCopy< UndirectedGraphProcess, MixtureUndirectedGraphProcess >
@@ -57,7 +134,7 @@ namespace statiskit
                     virtual std::unique_ptr< Computation > copy() const = 0;
                 };
 
-                class STATISKIT_PGM_API VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization
+                class STATISKIT_PGM_API VariationalComputation : public PolymorphicCopy< Computation, VariationalComputation >, public Optimization< statiskit::Estimator >
                 {
                     public:
                         VariationalComputation();
@@ -113,10 +190,28 @@ namespace statiskit
                 // double uncertainty(const UndirectedGraph* graph) const;
 
             protected:
+                class FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
+                {
+                    public:
+                        FreeRandomWalk(const MixtureUndirectedGraphProcess* process);
+                        FreeRandomWalk(const FreeRandomWalk& walk);
+                        virtual ~FreeRandomWalk();
+
+                        virtual void operator() ();
+
+                        const std::vector< Index >& get_labels() const;
+
+                    protected:
+                        const MixtureUndirectedGraphProcess* _process;
+                        std::vector< Index > _labels;
+                };
+
                 Computation* _computation;
                 Index _nb_vertices;
                 Eigen::VectorXd _alpha;
                 Eigen::MatrixXd _pi;
+
+                std::unique_ptr< UndirectedGraphProcess::FreeRandomWalk > free_random_walk() const;
         };
     }
 }
