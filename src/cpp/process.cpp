@@ -4,11 +4,132 @@ namespace statiskit
 {
     namespace pgm
     {
+        UndirectedGraphProcess::RandomWalk::~RandomWalk()
+        {}
+
+        void UndirectedGraphProcess::RandomWalk::operator() (const unsigned int& length)
+        {
+            for(unsigned int index = 0; index < length; ++index)
+            { (*this)(); }
+        }
+
+        UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::ChordalRandomWalk(const FreeRandomWalk& walk)
+        { 
+            _walk = static_cast< FreeRandomWalk* >(walk.copy().release());
+            _unique = false;
+            _maxits = 10000;
+        }
+
+        UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::ChordalRandomWalk(const ChordalRandomWalk& walk)
+        { 
+            _walk = static_cast< FreeRandomWalk* >(walk._walk->copy().release());
+            _unique = walk._unique;
+            _maxits = walk._maxits;
+        }
+
+        UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::~ChordalRandomWalk()
+        {
+            if(_walk)
+            {
+                delete _walk;
+                _walk = nullptr;
+            }
+        }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::operator() ()
+        {
+            if(_unique)
+            {
+                std::unique_ptr< UndirectedGraph > graph = _walk->_graph->copy();
+                (*_walk)();
+                unsigned int its = 0;
+                while(its < _maxits && !(_walk->_graph->is_chordal()))
+                {
+                    _walk->_graph = graph.release();
+                    (*_walk)();
+                    ++its;
+                }
+                if(its == _maxits && !(_walk->_graph->is_chordal()))
+                { throw std::runtime_error("simulation failed"); }
+            }
+            else
+            { 
+                std::unique_ptr< UndirectedGraph > graph = _walk->_graph->copy();
+                (*_walk)();
+                if(!(_walk->_graph->is_chordal()))
+                { _walk->_graph = graph.release(); }
+            }
+            return ;
+        }
+
+        const UndirectedGraph* UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::get_graph() const
+        { return _walk->get_graph(); }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::set_graph(const UndirectedGraph& graph)
+        {
+            if(!graph.is_chordal())
+            { throw parameter_error("graph", "should be chordal"); }
+            set_graph(graph);
+        }
+
+        bool UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::get_unique() const
+        { return _unique; }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::set_unique(const bool& unique)
+        { _unique = unique; }
+
+        unsigned int UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::get_maxits() const
+        { return _maxits; }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::set_maxits(const unsigned int& maxits)
+        { _maxits = maxits; }
+
+        UndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk()
+        { _graph = nullptr; }
+
+        UndirectedGraphProcess::FreeRandomWalk::~FreeRandomWalk()
+        {
+            if(_graph)
+            {
+                delete _graph;
+                _graph = nullptr;
+            }
+        }
+
+        const UndirectedGraph* UndirectedGraphProcess::FreeRandomWalk::get_graph() const
+        { return _graph; }
+
+        void UndirectedGraphProcess::FreeRandomWalk::set_graph(const UndirectedGraph& graph)
+        { 
+            if(_graph)
+            {
+                delete _graph;
+                _graph = nullptr;
+            }
+            _graph = graph.copy().release(); 
+        }
+
         UndirectedGraphProcess::~UndirectedGraphProcess()
         {}
 
         double UndirectedGraphProcess::pdf(const UndirectedGraph* graph) const
         { return exp(ldf(graph)); }
+
+        std::unique_ptr< UndirectedGraphProcess::RandomWalk > UndirectedGraphProcess::random_walk(const walk_type& walk) const
+        {
+            std::unique_ptr< RandomWalk > random_walk = free_random_walk();
+            switch(walk)
+            {
+                case FREE:
+                    break;
+                case CHORDAL:
+                    random_walk = std::make_unique< FreeRandomWalk::ChordalRandomWalk >(*(static_cast< FreeRandomWalk* >(random_walk.get())));
+                    break;
+                default:
+                    throw not_implemented_error("random_walk");
+            }
+            return random_walk;
+        }
 
         ErdosRenyiUndirectedGraphProcess::ErdosRenyiUndirectedGraphProcess(const Index& nb_vertices, const double& pi)
         {
@@ -56,6 +177,41 @@ namespace statiskit
             }
             return std::move(graph);
         }
+
+        ErdosRenyiUndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk(const ErdosRenyiUndirectedGraphProcess* process) : PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >()
+        { 
+            _process = process;
+            _graph = new UndirectedGraph(_process->_nb_vertices);
+        }
+
+        ErdosRenyiUndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk(const FreeRandomWalk& walk) : PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >(walk)
+        { 
+            _process = walk._process;
+            _graph = walk._graph->copy().release();
+        }
+
+        ErdosRenyiUndirectedGraphProcess::FreeRandomWalk::~FreeRandomWalk()
+        {}
+
+        void ErdosRenyiUndirectedGraphProcess::FreeRandomWalk::operator() ()
+        {
+            boost::uniform_01<> E;
+            double e = boost::variate_generator<boost::mt19937&, boost::uniform_01<> >(__impl::get_random_generator(), E)();
+            if(e < _process->_pi)
+            {
+                boost::random::uniform_int_distribution<> S(0, _process->_nb_vertices - 1), T(0, _process->_nb_vertices - 2);
+                int s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)(), t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
+                if(t >= s)
+                { t += 2; }
+                if(_graph->has_edge(s, t))
+                { _graph->remove_edge(s, t); }
+                else
+                { _graph->add_edge(s, t); }
+            }
+        }
+
+        std::unique_ptr< UndirectedGraphProcess::FreeRandomWalk > ErdosRenyiUndirectedGraphProcess::free_random_walk() const
+        { return std::make_unique< FreeRandomWalk >(this); }
 
         Index ErdosRenyiUndirectedGraphProcess::get_nb_vertices() const
         { return _nb_vertices; }
@@ -344,5 +500,63 @@ namespace statiskit
             { throw member_error("_computation", "not given"); }
             return indices;
         }
+
+        MixtureUndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk(const MixtureUndirectedGraphProcess* process) : PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >()
+        { 
+            _process = process;
+            _graph = new UndirectedGraph(_process->_nb_vertices);
+            _labels = std::vector< Index >(_process->_nb_vertices, 0);
+            // Eigen::VectorXd alpha = _process._alpha;
+            // for(Index index = 1, max_index = alpha.size(); index < max_index; ++index)
+            // { alpha(index) += alpha(index - 1); }
+            // alpha /= alpha[alpha.size() - 1];
+            boost::uniform_01<> E;
+            boost::variate_generator<boost::mt19937&, boost::uniform_01<> > simulator(__impl::get_random_generator(), E);     
+            for(Index index = 0, max_index = _process->_nb_vertices; index < max_index; ++index)
+            {
+                double s = 0., e = simulator();
+                while(_labels[index] < _process->_alpha.size() && s < e)
+                {
+                    s += _process->_alpha(_labels[index]);
+                    ++_labels[index];
+                }
+                if(_labels[index] < _process->_alpha.size())
+                { --_labels[index]; }
+            }
+        }
+
+        MixtureUndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk(const FreeRandomWalk& walk) : PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >(walk)
+        { 
+            _process = walk._process;
+            _graph = walk._graph->copy().release();
+            _labels = walk._labels;
+        }
+
+        MixtureUndirectedGraphProcess::FreeRandomWalk::~FreeRandomWalk()
+        {}
+
+        void MixtureUndirectedGraphProcess::FreeRandomWalk::operator() ()
+        {
+            boost::random::uniform_int_distribution<> S(0, _process->_nb_vertices - 1), T(0, _process->_nb_vertices - 2);
+            int s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)(), t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
+            if(t >= s)
+            { t += 2; }
+            boost::uniform_01<> E;
+            double e = boost::variate_generator<boost::mt19937&, boost::uniform_01<> >(__impl::get_random_generator(), E)();
+            if(e < _process->_pi(s, t))
+            {
+
+                if(_graph->has_edge(s, t))
+                { _graph->remove_edge(s, t); }
+                else
+                { _graph->add_edge(s, t); }
+            }
+        }
+
+        const std::vector< Index >& MixtureUndirectedGraphProcess::FreeRandomWalk::get_labels() const
+        { return _labels; }
+
+        std::unique_ptr< UndirectedGraphProcess::FreeRandomWalk > MixtureUndirectedGraphProcess::free_random_walk() const
+        { return std::make_unique< FreeRandomWalk >(this); }
     }
 }

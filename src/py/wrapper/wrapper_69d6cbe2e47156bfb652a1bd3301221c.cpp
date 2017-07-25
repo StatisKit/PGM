@@ -60,11 +60,13 @@ void wrapper_69d6cbe2e47156bfb652a1bd3301221c()
     double  (::statiskit::pgm::UndirectedGraphProcess::*method_pointer_3f9511dc89915bc9bf824e39dddc9523)(class ::statiskit::pgm::UndirectedGraph const *) const = &::statiskit::pgm::UndirectedGraphProcess::ldf;
     double  (::statiskit::pgm::UndirectedGraphProcess::*method_pointer_854479c20c7051f4919fd2cc7c794145)(class ::statiskit::pgm::UndirectedGraph const *) const = &::statiskit::pgm::UndirectedGraphProcess::pdf;
     class ::std::unique_ptr< class ::statiskit::pgm::UndirectedGraph, struct ::std::default_delete< class ::statiskit::pgm::UndirectedGraph > >  (::statiskit::pgm::UndirectedGraphProcess::*method_pointer_397fba6314f45bcc937074d4ac95d8a7)() const = &::statiskit::pgm::UndirectedGraphProcess::simulate;
+    class ::std::unique_ptr< struct ::statiskit::pgm::UndirectedGraphProcess::RandomWalk, struct ::std::default_delete< struct ::statiskit::pgm::UndirectedGraphProcess::RandomWalk > >  (::statiskit::pgm::UndirectedGraphProcess::*method_pointer_3078fd5842da57208307a14ef2b9d634)(enum ::statiskit::pgm::UndirectedGraphProcess::walk_type const &) const = &::statiskit::pgm::UndirectedGraphProcess::random_walk;
     class ::std::unique_ptr< struct ::statiskit::pgm::UndirectedGraphProcess, struct ::std::default_delete< struct ::statiskit::pgm::UndirectedGraphProcess > >  (::statiskit::pgm::UndirectedGraphProcess::*method_pointer_a265bf73ffdf50968ae2e503a57b743b)() const = &::statiskit::pgm::UndirectedGraphProcess::copy;
     boost::python::class_< autowig::Wrap_69d6cbe2e47156bfb652a1bd3301221c, autowig::Held< autowig::Wrap_69d6cbe2e47156bfb652a1bd3301221c >::Type, boost::noncopyable > class_69d6cbe2e47156bfb652a1bd3301221c("UndirectedGraphProcess", "", boost::python::no_init);
     class_69d6cbe2e47156bfb652a1bd3301221c.def("ldf", boost::python::pure_virtual(method_pointer_3f9511dc89915bc9bf824e39dddc9523), "");
     class_69d6cbe2e47156bfb652a1bd3301221c.def("pdf", method_pointer_854479c20c7051f4919fd2cc7c794145, "");
     class_69d6cbe2e47156bfb652a1bd3301221c.def("simulate", boost::python::pure_virtual(method_pointer_397fba6314f45bcc937074d4ac95d8a7), "");
+    class_69d6cbe2e47156bfb652a1bd3301221c.def("random_walk", method_pointer_3078fd5842da57208307a14ef2b9d634, "");
     class_69d6cbe2e47156bfb652a1bd3301221c.def("copy", boost::python::pure_virtual(method_pointer_a265bf73ffdf50968ae2e503a57b743b), "");
     if(autowig::Held< struct ::statiskit::pgm::UndirectedGraphProcess >::is_class)
     {
