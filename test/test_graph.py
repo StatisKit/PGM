@@ -68,10 +68,10 @@ class TestUndirectedGraph(unittest.TestCase):
         self.assertEqual(graph.nb_cliques, 3)
         cliques = ["{4}", "{2, 3}", "{0, 1, 2}"]
         for c in range(len(graph.cliques)):
-            self.assertEqual(str(graph.cliques[c]), cliques[c])
+            self.assertIn(str(graph.cliques[c]), cliques)
         separators = ["{}", "{}", "{2}"]
         for s in range(len(graph.separators)):
-            self.assertEqual(str(graph.separators[s]), separators[s])
+            self.assertIn(str(graph.separators[s]), separators)
 
     def test_read_write_dot(self):
         """Test undirected graph read & write methods with DOT format"""
