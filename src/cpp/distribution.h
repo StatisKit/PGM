@@ -55,7 +55,7 @@ namespace statiskit
                 GraphicalGaussianDistributionMLEstimation(const GraphicalGaussianDistributionMLEstimation& estimation);
                 virtual ~GraphicalGaussianDistributionMLEstimation();
 
-                class STATISKIT_CORE_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
+                class STATISKIT_PGM_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
                 {
                     public:
                         Estimator();
@@ -83,7 +83,7 @@ namespace statiskit
                 virtual ~GraphicalGaussianDistributionIMLEstimation();
 
 
-                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
                         Estimator();
@@ -99,7 +99,7 @@ namespace statiskit
                         statiskit::linalg::solver_type _inverser;
                 };
 
-                struct STATISKIT_CORE_API CDEstimator : public Estimator
+                struct STATISKIT_PGM_API CDEstimator : public Estimator
                 {
                     CDEstimator();
                     CDEstimator(const CDEstimator& estimator);
@@ -110,7 +110,7 @@ namespace statiskit
                     virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
                 };
 
-                class STATISKIT_CORE_API NREstimator : public Estimator
+                class STATISKIT_PGM_API NREstimator : public Estimator
                 {
                     public:
                         NREstimator();
@@ -145,7 +145,7 @@ namespace statiskit
                 GraphicalGaussianDistributionSIMLEstimation(const GraphicalGaussianDistributionSIMLEstimation& estimation);
                 virtual ~GraphicalGaussianDistributionSIMLEstimation();
 
-                class STATISKIT_CORE_API Estimator : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
                         Estimator();
@@ -161,7 +161,7 @@ namespace statiskit
                         statiskit::linalg::sparse_solver_type _inverser;
                 };
 
-                class STATISKIT_CORE_API CDEstimator : public Estimator
+                class STATISKIT_PGM_API CDEstimator : public Estimator
                 {
                     public:
                         CDEstimator();

@@ -101,7 +101,7 @@ namespace statiskit
                 void set_pi(const double& pi);
 
             protected:
-                class FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
+                class STATISKIT_PGM_API FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
                 {
                     public:
                         FreeRandomWalk(const ErdosRenyiUndirectedGraphProcess* process);
@@ -190,7 +190,7 @@ namespace statiskit
                 // double uncertainty(const UndirectedGraph* graph) const;
 
             protected:
-                class FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
+                class STATISKIT_PGM_API FreeRandomWalk : public PolymorphicCopy< RandomWalk, FreeRandomWalk, UndirectedGraphProcess::FreeRandomWalk >
                 {
                     public:
                         FreeRandomWalk(const MixtureUndirectedGraphProcess* process);
