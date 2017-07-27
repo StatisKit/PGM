@@ -28,10 +28,11 @@ class TestErdosRenyiUndirectedGraphProcess(unittest.TestCase):
     def test_simulate(self):
         """Test Erdos-Renyi undirected graph distribution simulation"""
         self._dist.simulate()
-        # walk = self._dist.random_walk(length=10)
-        # self.assertLess(walk.graph.nb_edges, 10)
         walk = self._dist.random_walk("chordal", length=10)
-        self.assertLess(walk.graph.nb_edges, 10)
+        self.assertLessEqual(walk.graph.nb_edges, 10)
+        del walk
+        walk = self._dist.random_walk("connected", length=10)
+        self.assertLessEqual(walk.graph.nb_edges, 190)
         del walk
 
     @classmethod

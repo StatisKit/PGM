@@ -15,7 +15,7 @@ class TestMixtureUndirectedGraphProcess(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Test mixture undirected graph distribution construction"""
-        cls._dist = pgm.UndirectedGraphProcess("mixture", nb_vertices=2, nb_states=2)
+        cls._dist = pgm.UndirectedGraphProcess("mixture", nb_vertices=20, nb_states=2)
 
     # def test_pdf_ldf(self):
     #     """Test mixture undirected graph distribution ldf"""
@@ -27,11 +27,10 @@ class TestMixtureUndirectedGraphProcess(unittest.TestCase):
 
     def test_simulate(self):
         """Test mixture undirected graph distribution simulation"""
-        counts = [0, 0]
-        for index in range(100):
-            nb_edges = self._dist.simulate().nb_edges
-            counts[nb_edges] = counts[nb_edges] + 1
-        self.assertLessEqual(math.fabs(counts[0] - counts[1]) / sum(counts), 0.1)
+        self._dist.simulate()
+        walk = self._dist.random_walk("chordal", length=10)
+        self.assertLess(walk.graph.nb_edges, 10)
+        del walk
 
     def test_posterior(self):
         """Test mixture undirected graph distribution posterior"""

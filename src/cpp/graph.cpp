@@ -228,6 +228,32 @@ namespace statiskit
             return chordal;
         }
 
+        bool UndirectedGraph::is_connected() const
+        {
+            Neighbours non_colored;
+            Index u , v = get_nb_vertices();
+            for(u = 0; u < v; ++u)
+            { non_colored.insert(non_colored.end(), u); }
+            u = *(non_colored.begin());
+            std::vector< Index > stack = std::vector< Index >();
+            stack.push_back(u);
+            while(stack.size() > 0)
+            {
+                u = stack.back();
+                stack.pop_back();
+                if(non_colored.find(u) != non_colored.end())
+                {
+                    non_colored.erase(u);
+                    for(Neighbours::const_iterator it = _adjacency[u].begin(), it_end = _adjacency[u].end(); it != it_end; ++it)
+                    { 
+                        if(non_colored.find(*it) != non_colored.end())
+                        { stack.push_back(*it); }
+                    }
+                }
+            }
+            return non_colored.size() == 0;
+        }
+
         std::vector< Indices > UndirectedGraph::bron_kerbosch() const
         {
             std::vector< Indices > cliques;

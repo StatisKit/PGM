@@ -121,6 +121,8 @@ namespace statiskit
 
                 virtual bool is_chordal() const;
 
+                virtual bool is_connected() const;
+                
                 std::vector< Indices > bron_kerbosch() const;
 
                 double density() const;
