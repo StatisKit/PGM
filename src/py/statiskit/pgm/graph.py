@@ -19,6 +19,8 @@ del UndirectedGraph.get_nb_edges
 
 UndirectedGraph.is_chordal = property(UndirectedGraph.is_chordal)
 
+UndirectedGraph.is_connected = property(UndirectedGraph.is_connected)
+
 UndirectedGraph.density = property(UndirectedGraph.density)
 
 def to_matrix(self, sort=None):

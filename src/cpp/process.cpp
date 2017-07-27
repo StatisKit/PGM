@@ -84,6 +84,77 @@ namespace statiskit
         void UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::set_maxits(const unsigned int& maxits)
         { _maxits = maxits; }
 
+        UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::ConnectedRandomWalk(const FreeRandomWalk& walk)
+        { 
+            _walk = static_cast< FreeRandomWalk* >(walk.copy().release());
+            _unique = false;
+            _maxits = 10000;
+        }
+
+        UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::ConnectedRandomWalk(const ConnectedRandomWalk& walk)
+        { 
+            _walk = static_cast< FreeRandomWalk* >(walk._walk->copy().release());
+            _unique = walk._unique;
+            _maxits = walk._maxits;
+        }
+
+        UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::~ConnectedRandomWalk()
+        {
+            if(_walk)
+            {
+                delete _walk;
+                _walk = nullptr;
+            }
+        }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::operator() ()
+        {
+            if(_unique)
+            {
+                std::unique_ptr< UndirectedGraph > graph = _walk->_graph->copy();
+                (*_walk)();
+                unsigned int its = 0;
+                while(its < _maxits && !(_walk->_graph->is_chordal()))
+                {
+                    _walk->_graph = graph.release();
+                    (*_walk)();
+                    ++its;
+                }
+                if(its == _maxits && !(_walk->_graph->is_chordal()))
+                { throw std::runtime_error("simulation failed"); }
+            }
+            else
+            { 
+                std::unique_ptr< UndirectedGraph > graph = _walk->_graph->copy();
+                (*_walk)();
+                if(!(_walk->_graph->is_chordal()))
+                { _walk->_graph = graph.release(); }
+            }
+            return ;
+        }
+
+        const UndirectedGraph* UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::get_graph() const
+        { return _walk->get_graph(); }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::set_graph(const UndirectedGraph& graph)
+        {
+            if(!graph.is_connected())
+            { throw parameter_error("graph", "should be chordal"); }
+            set_graph(graph);
+        }
+
+        bool UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::get_unique() const
+        { return _unique; }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::set_unique(const bool& unique)
+        { _unique = unique; }
+
+        unsigned int UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::get_maxits() const
+        { return _maxits; }
+
+        void UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::set_maxits(const unsigned int& maxits)
+        { _maxits = maxits; }
+
         UndirectedGraphProcess::FreeRandomWalk::FreeRandomWalk()
         { _graph = nullptr; }
 
@@ -124,6 +195,19 @@ namespace statiskit
                     break;
                 case CHORDAL:
                     random_walk = std::make_unique< FreeRandomWalk::ChordalRandomWalk >(*(static_cast< FreeRandomWalk* >(random_walk.get())));
+                    break;
+                case CONNECTED:
+                    {
+                        UndirectedGraph* graph = random_walk->get_graph()->copy().release();
+                        for(Index u = 0, max_u = graph->get_nb_vertices(); u < max_u; ++u)
+                        {
+                            for(Index v = 0; v < u; ++v)
+                                { graph->add_edge(u, v); }
+                        }
+                        random_walk->set_graph(*graph);
+                        delete graph;
+                        random_walk = std::make_unique< FreeRandomWalk::ChordalRandomWalk >(*(static_cast< FreeRandomWalk* >(random_walk.get())));
+                    }
                     break;
                 default:
                     throw not_implemented_error("random_walk");
@@ -195,18 +279,32 @@ namespace statiskit
 
         void ErdosRenyiUndirectedGraphProcess::FreeRandomWalk::operator() ()
         {
-            boost::uniform_01<> E;
-            double e = boost::variate_generator<boost::mt19937&, boost::uniform_01<> >(__impl::get_random_generator(), E)();
-            if(e < _process->_pi)
+            if(_process->_nb_vertices > 1)
             {
-                boost::random::uniform_int_distribution<> S(0, _process->_nb_vertices - 1), T(0, _process->_nb_vertices - 2);
-                int s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)(), t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
-                if(t >= s)
-                { t += 2; }
-                if(_graph->has_edge(s, t))
-                { _graph->remove_edge(s, t); }
+                int s, t;
+                if(_process->_nb_vertices > 2)
+                { 
+                    boost::random::uniform_int_distribution<> S(1, _process->_nb_vertices - 1);
+                    s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)();
+                    boost::random::uniform_int_distribution<> T(0, s - 1);
+                    t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
+                }
                 else
-                { _graph->add_edge(s, t); }
+                {
+                    s = 0;
+                    t = 1;
+                }
+                double u = boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())();
+                if(_graph->has_edge(s, t))
+                { 
+                    if(u < (1. - _process->_pi) / _process->_pi)
+                    { _graph->remove_edge(s, t); }
+                }
+                else
+                {
+                    if(u < _process->_pi / (1. - _process->_pi))
+                    { _graph->add_edge(s, t); }
+                }
             }
         }
 
@@ -506,22 +604,22 @@ namespace statiskit
             _process = process;
             _graph = new UndirectedGraph(_process->_nb_vertices);
             _labels = std::vector< Index >(_process->_nb_vertices, 0);
-            // Eigen::VectorXd alpha = _process._alpha;
+            Eigen::VectorXd alpha = _process->_alpha;
             // for(Index index = 1, max_index = alpha.size(); index < max_index; ++index)
             // { alpha(index) += alpha(index - 1); }
             // alpha /= alpha[alpha.size() - 1];
             boost::uniform_01<> E;
-            boost::variate_generator<boost::mt19937&, boost::uniform_01<> > simulator(__impl::get_random_generator(), E);     
-            for(Index index = 0, max_index = _process->_nb_vertices; index < max_index; ++index)
+            boost::variate_generator<boost::mt19937&, boost::uniform_01<> > simulator(__impl::get_random_generator(), E);
+            for(Index u = 0; u < _process->_nb_vertices; ++u)
             {
-                double s = 0., e = simulator();
-                while(_labels[index] < _process->_alpha.size() && s < e)
+                Index index = 0;
+                double cp = alpha[index], sp = boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())();
+                while(cp < sp && index < _process->get_nb_states())
                 {
-                    s += _process->_alpha(_labels[index]);
-                    ++_labels[index];
+                    ++index;
+                    cp += alpha[index];
                 }
-                if(_labels[index] < _process->_alpha.size())
-                { --_labels[index]; }
+                _labels[u] = index;
             }
         }
 
@@ -537,19 +635,32 @@ namespace statiskit
 
         void MixtureUndirectedGraphProcess::FreeRandomWalk::operator() ()
         {
-            boost::random::uniform_int_distribution<> S(0, _process->_nb_vertices - 1), T(0, _process->_nb_vertices - 2);
-            int s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)(), t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
-            if(t >= s)
-            { t += 2; }
-            boost::uniform_01<> E;
-            double e = boost::variate_generator<boost::mt19937&, boost::uniform_01<> >(__impl::get_random_generator(), E)();
-            if(e < _process->_pi(s, t))
+            if(_process->_nb_vertices > 1)
             {
-
-                if(_graph->has_edge(s, t))
-                { _graph->remove_edge(s, t); }
+                int s, t;
+                if(_process->_nb_vertices > 2)
+                { 
+                    boost::random::uniform_int_distribution<> S(1, _process->_nb_vertices - 1);
+                    s = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), S)();
+                    boost::random::uniform_int_distribution<> T(0, s - 1);
+                    t = boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> >(__impl::get_random_generator(), T)();
+                }
                 else
-                { _graph->add_edge(s, t); }
+                {
+                    s = 0;
+                    t = 1;
+                }
+                double u = boost::uniform_01<boost::mt19937&>(__impl::get_random_generator())();
+                if(_graph->has_edge(s, t))
+                { 
+                    if(u < (1. - _process->_pi(_labels[s], _labels[t])) / _process->_pi(_labels[s], _labels[t]))
+                    { _graph->remove_edge(s, t); }
+                }
+                else
+                {
+                    if(u < _process->_pi(_labels[s], _labels[t]) / (1. - _process->_pi(_labels[s], _labels[t])))
+                    { _graph->add_edge(s, t); }
+                }
             }
         }
 

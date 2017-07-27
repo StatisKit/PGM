@@ -22,4 +22,6 @@ void wrapper_5c085b175dd45818bf930ad490cf93b6()
 
     enum_5c085b175dd45818bf930ad490cf93b6.value("CHORDAL", ::statiskit::pgm::UndirectedGraphProcess::CHORDAL);
 
+    enum_5c085b175dd45818bf930ad490cf93b6.value("CONNECTED", ::statiskit::pgm::UndirectedGraphProcess::CONNECTED);
+
 }

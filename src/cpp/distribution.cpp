@@ -75,12 +75,13 @@ namespace statiskit
 
         void GraphicalGaussianDistribution::set_theta(const Eigen::MatrixXd& theta)
         {
-            Eigen::MatrixXd sigma = theta.inverse();
-            Eigen::LLT< Eigen:: MatrixXd > llt(sigma);
-            if(llt.info() == Eigen::NumericalIssue)
+            Eigen::LDLT< Eigen:: MatrixXd > ldlt(theta);
+            if(ldlt.info() == Eigen::NumericalIssue || !ldlt.isPositive())
             { throw parameter_error("theta", "non semi-positive definite matrix"); }   
-            _cholesky = llt.matrixL();
-            _determinant = sigma.determinant();
+            _cholesky = ldlt.matrixL();//
+            _cholesky = (ldlt.transpositionsP().transpose() * _cholesky).eval() * ldlt.vectorD().cwiseSqrt().asDiagonal();
+            _cholesky = (_cholesky.inverse().transpose()).eval();
+            _determinant = 1 / theta.determinant();
             _theta = theta;
          }
 

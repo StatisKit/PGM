@@ -16,6 +16,7 @@ namespace statiskit
                 enum walk_type {
                     FREE,
                     CHORDAL,
+                    CONNECTED
                 };
 
                 struct STATISKIT_PGM_API RandomWalk
@@ -52,6 +53,30 @@ namespace statiskit
                                 ChordalRandomWalk(const FreeRandomWalk& walk);
                                 ChordalRandomWalk(const ChordalRandomWalk& walk);
                                 virtual ~ChordalRandomWalk();
+
+                                virtual void operator() ();
+
+                                virtual const UndirectedGraph* get_graph() const;
+                                virtual void set_graph(const UndirectedGraph& graph);
+
+                                bool get_unique() const;
+                                void set_unique(const bool& unique);
+
+                                unsigned int get_maxits() const;
+                                void set_maxits(const unsigned int& maxits);
+
+                            protected:
+                                FreeRandomWalk* _walk;
+                                bool _unique;
+                                unsigned int _maxits;
+                        };
+
+                        class STATISKIT_PGM_API ConnectedRandomWalk : public PolymorphicCopy< RandomWalk, ConnectedRandomWalk >
+                        {
+                            public:
+                                ConnectedRandomWalk(const FreeRandomWalk& walk);
+                                ConnectedRandomWalk(const ConnectedRandomWalk& walk);
+                                virtual ~ConnectedRandomWalk();
 
                                 virtual void operator() ();
 
