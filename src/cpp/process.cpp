@@ -69,7 +69,7 @@ namespace statiskit
         {
             if(!graph.is_chordal())
             { throw parameter_error("graph", "should be chordal"); }
-            set_graph(graph);
+            _walk->set_graph(graph);
         }
 
         bool UndirectedGraphProcess::FreeRandomWalk::ChordalRandomWalk::get_unique() const
@@ -140,7 +140,7 @@ namespace statiskit
         {
             if(!graph.is_connected())
             { throw parameter_error("graph", "should be chordal"); }
-            set_graph(graph);
+            _walk->set_graph(graph);
         }
 
         bool UndirectedGraphProcess::FreeRandomWalk::ConnectedRandomWalk::get_unique() const
