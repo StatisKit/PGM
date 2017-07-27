@@ -4,8 +4,8 @@ platform:
 
 environment:
   matrix:
-    - RECIPE: libstatiskit_pgm
-    - RECIPE: python-statiskit_pgm
+    - CONDA_RECIPE: libstatiskit_pgm
+    - CONDA_RECIPE: python-statiskit_pgm
 
 install:
   - git clone https://github.com/StatisKit/appveyor-ci.git
