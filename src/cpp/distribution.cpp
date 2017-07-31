@@ -128,7 +128,7 @@ namespace statiskit
                     event->set(index, *(normal.simulate().get()));
                 }
             }
-            return event;
+            return std::move(event);
         }
 
         const DirectedGraph* ChordalGaussianDistribution::get_graph() const
