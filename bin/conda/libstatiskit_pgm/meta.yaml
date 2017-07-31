@@ -17,6 +17,8 @@ requirements:
         - libdev
         - libboost
         - libstatiskit_core
+        - libstatiskit_glm
     run:
         - libboost
         - libstatiskit_core
+        - libstatiskit_glm
