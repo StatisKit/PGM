@@ -179,12 +179,12 @@ namespace statiskit
             Adjacency colored;
             for(Index u = 0, max_u = get_nb_vertices(); u < max_u; ++u)
             {
-                colored.insert(u);
-                const Adjacency& ne = neighbours(u);
+                colored.insert(order[u]);
+                const Adjacency& ne = neighbours(order[u]);
                 for(Adjacency::const_iterator it = ne.cbegin(), it_end = ne.cend(); it != it_end; ++it)
                 {
                     if(colored.find(*it) != colored.end())
-                    { graph->add_edge(*it, u); }
+                    { graph->add_edge(*it, order[u]); }
                 }
             }
             return graph;
