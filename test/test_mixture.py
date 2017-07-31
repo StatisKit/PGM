@@ -29,7 +29,7 @@ class TestMixtureUndirectedGraphProcess(unittest.TestCase):
         """Test mixture undirected graph distribution simulation"""
         self._dist.simulate()
         walk = self._dist.random_walk("chordal", length=10)
-        self.assertLess(walk.graph.nb_edges, 10)
+        self.assertLessEqual(walk.graph.nb_edges, 10)
         del walk
 
     def test_posterior(self):

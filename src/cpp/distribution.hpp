@@ -33,8 +33,8 @@ namespace statiskit
                         for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
                         {
                             unsigned int degree = 1;
-                            const Neighbours& ne = _graph->neighbours(index);
-                            for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                            const Adjacency& ne = _graph->neighbours(index);
+                            for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                             {
                                 if(*itv <= index)
                                 { ++degree; }
@@ -45,8 +45,8 @@ namespace statiskit
                         for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
                         { 
                             K.insert(index, index) = 1 / S(index, index);
-                            const Neighbours& ne = _graph->neighbours(index);
-                            for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                            const Adjacency& ne = _graph->neighbours(index);
+                            for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                             {
                                 if(*itv <= index)
                                 { K.insert(index, *itv) = 0.; }
@@ -60,8 +60,8 @@ namespace statiskit
                         for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
                         {
                             unsigned int degree = 1;
-                            const Neighbours& ne = _graph->neighbours(index);
-                            for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                            const Adjacency& ne = _graph->neighbours(index);
+                            for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                             { ++degree; }
                             entries(index) = degree; 
                         }
@@ -69,8 +69,8 @@ namespace statiskit
                         for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
                         { 
                             K.insert(index, index) = 1 / S(index, index);
-                            const Neighbours& ne = _graph->neighbours(index);
-                            for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                            const Adjacency& ne = _graph->neighbours(index);
+                            for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                             { K.insert(index, *itv) = 0.; }
                         }
                         break;
@@ -97,9 +97,9 @@ namespace statiskit
                     prev = curr;
                     for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
                     {
-                        Neighbours ne = _graph->neighbours(u);
+                        Adjacency ne = _graph->neighbours(u);
                         ne.insert(u);
-                        for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                        for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                         {
                             if(*itv <= u)
                             {

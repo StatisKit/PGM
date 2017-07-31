@@ -43,13 +43,13 @@ class TestUndirectedGraph(unittest.TestCase):
 
     def test_connected(self):
         """Test undirected graph connected"""
-        self.assertTrue(self._graph.are_connected((0,1), (2,3)))
-        self.assertFalse(self._graph.are_connected((0,1,2,3), (4,)))
+        self.assertTrue(self._graph.are_connected((0, 1), (2, 3)))
+        self.assertFalse(self._graph.are_connected((0, 1, 2, 3), (4,)))
 
     def test_separated(self):
         """Test undirected graph separated"""
-        self.assertTrue(self._graph.are_separated((0,1), (3,), (2,)))
-        self.assertFalse(self._graph.are_separated((0,1), (2,), (3,)))
+        self.assertTrue(self._graph.are_separated((0, 1), (3,), (2,)))
+        self.assertFalse(self._graph.are_separated((0, 1), (2,), (3,)))
 
     def test_chordality(self):
         """Test undirected graph chordality"""
@@ -117,4 +117,80 @@ class TestUndirectedForest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Test undirected forest deletion"""
+        del cls._graph
+
+@attr(linux=True,
+      osx=True,
+      win=True,
+      level=1)
+class TestDirectedGraph(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """Test directed graph construction"""
+        cls._graph = pgm.DirectedGraph(linalg.Matrix([[0.0, 0.0, 0.0, 0.0, 0.0],
+                                                      [1.0, 0.0, 0.0, 0.0, 0.0],
+                                                      [1.0, 0.0, 0.0, 0.0, 0.0],
+                                                      [0.0, 0.0, 0.0, 0.0, 1.0],
+                                                      [0.0, 0.0, 0.0, 0.0, 0.0]]))
+
+    def test_str(self):
+        """Test undirected graph string representation"""
+        self.assertEqual(str(self._graph), """[0.0, 0.0, 0.0, 0.0, 0.0]
+[1.0, 0.0, 0.0, 0.0, 0.0]
+[1.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 1.0]
+[0.0, 0.0, 0.0, 0.0, 0.0]""")
+
+    def test_edge(self):
+        """Test directed graph edge"""
+        self.assertTrue(self._graph.has_edge(1, 0))
+        self.assertFalse(self._graph.has_edge(0, 1))
+        self.assertFalse(self._graph.has_edge(0, 3))
+
+    def test_in_degree(self):
+        """Test directed graph in degrees"""
+        self.assertEqual(self._graph.in_degree(0), 2)
+        self.assertEqual(self._graph.in_degree(0), len(self._graph.parents(0)))
+        self.assertEqual(self._graph.in_degree(3), 0)
+        self.assertEqual(self._graph.in_degree(3), len(self._graph.parents(3)))
+
+    def test_out_degree(self):
+        """Test directed graph in degrees"""
+        self.assertEqual(self._graph.out_degree(0), 0)
+        self.assertEqual(self._graph.out_degree(0), len(self._graph.children(0)))
+        self.assertEqual(self._graph.out_degree(3), 1)
+        self.assertEqual(self._graph.out_degree(3), len(self._graph.children(3)))
+
+    def test_weakly_connected(self):
+        """Test directed graph weakly connected"""
+        self.assertTrue(self._graph.are_weakly_connected((0, 1), (2, 3)))
+        self.assertFalse(self._graph.are_weakly_connected((0, 1, 2), (4,)))
+
+    def test_separated(self):
+        """Test directed graph separated"""
+        self.assertTrue(self._graph.are_separated((0, 1), (3,), (2,)))
+        self.assertFalse(self._graph.are_separated((0, 1), (2,), (3,)))
+
+    def test_undirected_graph(self):
+        """Test directed graph undirected graph computation"""
+        graph = self._graph.undirected_graph
+        self.assertEqual(str(graph), """[0.0, 1.0, 1.0, 0.0, 0.0]
+[1.0, 0.0, 0.0, 0.0, 0.0]
+[1.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 1.0]
+[0.0, 0.0, 0.0, 1.0, 0.0]""")
+
+    def test_moral_graph(self):
+        """Test directed graph moral graph computation"""
+        graph = self._graph.moral_graph
+        self.assertEqual(str(graph), """[0.0, 1.0, 1.0, 0.0, 0.0]
+[1.0, 0.0, 1.0, 0.0, 0.0]
+[1.0, 1.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 1.0]
+[0.0, 0.0, 0.0, 1.0, 0.0]""")
+
+    @classmethod
+    def tearDownClass(cls):
+        """Test undirected graph deletion"""
         del cls._graph

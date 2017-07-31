@@ -6,12 +6,81 @@
 #include <statiskit/core/estimation.h>
 #include <statiskit/core/moment.h>
 
+#include <unordered_map>
+#include <statiskit/glm/predictor.h>
+
 #include "graph.h"
 
 namespace statiskit
 {
     namespace pgm
     {
+        class STATISKIT_PGM_API ChordalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, ChordalGaussianDistribution, ContinuousMultivariateDistribution >
+        {
+            public:
+                ChordalGaussianDistribution(const DirectedGraph& graph);
+                ChordalGaussianDistribution(const ChordalGaussianDistribution& gaussian);
+                virtual ~ChordalGaussianDistribution();
+
+                virtual Index get_nb_components() const;
+
+                virtual unsigned int get_nb_parameters() const;
+
+                virtual double probability(const MultivariateEvent* event, const bool& logarithm) const;
+
+                std::unique_ptr< MultivariateEvent > simulate() const;
+
+                const DirectedGraph* get_graph() const;
+
+                statiskit::glm::ScalarPredictor* get_predictor(const Index& v) const;
+                void set_predictor(const Index& v, const statiskit::glm::ScalarPredictor& predictor);
+
+                double get_mu(const Index& v) const;
+                void set_mu(const Index& v, const double& mu);
+
+                const Eigen::VectorXd& get_sigma() const;
+                void set_sigma(const Eigen::VectorXd& sigma);
+
+            protected:
+                DirectedGraph* _graph;
+                std::unordered_map< Index, statiskit::glm::ScalarPredictor* > _predictors;
+                std::unordered_map< Index, double > _mu;
+                Eigen::VectorXd _sigma;
+        };
+
+        class STATISKIT_PGM_API ChordalGaussianDistributionMLEstimation : public ActiveEstimation< ChordalGaussianDistribution, ContinuousMultivariateDistributionEstimation >
+        {
+            public:
+                ChordalGaussianDistributionMLEstimation();
+                ChordalGaussianDistributionMLEstimation(ChordalGaussianDistribution const * estimated, MultivariateData const * data);
+                ChordalGaussianDistributionMLEstimation(const ChordalGaussianDistributionMLEstimation& estimation);
+                virtual ~ChordalGaussianDistributionMLEstimation();
+
+                class STATISKIT_PGM_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
+                {
+                    public:
+                        Estimator();
+                        Estimator(const Estimator& estimator);
+                        virtual ~Estimator();
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
+
+                        virtual std::unique_ptr< MultivariateDistributionEstimation::Estimator > copy() const;
+
+                        const statiskit::linalg::solver_type& get_solver() const;
+                        void set_solver(const statiskit::linalg::solver_type& solver);
+
+                        const DirectedGraph* get_graph() const;
+                        virtual void set_graph(const DirectedGraph& graph);
+
+                    protected:
+                        statiskit::linalg::solver_type _solver;
+                        DirectedGraph* _graph;
+
+                        Eigen::VectorXd compute_y(const MultivariateData& data, const Index& u) const;
+                };
+        };
+
         class STATISKIT_PGM_API GraphicalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, GraphicalGaussianDistribution, ContinuousMultivariateDistribution >
         {
             public:

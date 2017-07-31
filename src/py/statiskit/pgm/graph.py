@@ -4,12 +4,14 @@ import itertools
 import _pgm
 from __pgm.statiskit.pgm import (UndirectedGraph,
                                      UndirectedForest,
+                                 DirectedGraph,
                                  CliqueTree)
 
 from statiskit import linalg
 
 __all__ = ['UndirectedGraph',
-           'UndirectedForest']
+           'UndirectedForest',
+           'DirectedGraph']
 
 UndirectedGraph.nb_vertices = property(UndirectedGraph.get_nb_vertices)
 del UndirectedGraph.get_nb_vertices
@@ -20,6 +22,8 @@ del UndirectedGraph.get_nb_edges
 UndirectedGraph.is_chordal = property(UndirectedGraph.is_chordal)
 
 UndirectedGraph.is_connected = property(UndirectedGraph.is_connected)
+
+UndirectedGraph.directed_graph = property(UndirectedGraph.directed_graph)
 
 UndirectedGraph.density = property(UndirectedGraph.density)
 
@@ -61,6 +65,55 @@ def clique_tree(self):
 
 UndirectedGraph.clique_tree = clique_tree
 del clique_tree
+
+DirectedGraph.nb_vertices = property(DirectedGraph.get_nb_vertices)
+del DirectedGraph.get_nb_vertices
+
+DirectedGraph.nb_edges = property(DirectedGraph.get_nb_edges)
+del DirectedGraph.get_nb_edges
+
+DirectedGraph.is_acyclic = property(DirectedGraph.is_acyclic)
+
+DirectedGraph.is_weakly_connected = property(DirectedGraph.is_weakly_connected)
+
+DirectedGraph.undirected_graph = property(DirectedGraph.undirected_graph)
+
+DirectedGraph.moral_graph = property(DirectedGraph.moral_graph)
+
+DirectedGraph.density = property(DirectedGraph.density)
+
+def to_matrix(self, sort=None):
+    if sort is None:
+        vertices = range(self.nb_vertices)
+    elif isinstance(sort, list):
+        vertices = range(self.nb_vertices)
+        def sorter(vertex):
+            return sort[vertex]
+        vertices = sorted(vertices, key = sorter)
+    elif isinstance(sort, basestring):
+        if sort == 'mcs':
+            vertices = range(self.nb_vertices)
+            vertices = [vertices[vertex] for vertex in self.maximum_cardinality_search()]
+        else:
+            raise ValueError('\'sort\' parameter')
+    else:
+        raise TypeError('\'sort\' parameter')
+    return linalg.Matrix([[float(self.has_edge(u, v)) for v in vertices] for u in vertices])
+
+DirectedGraph.to_matrix = to_matrix
+del to_matrix
+
+def __str__(self):
+    return self.to_matrix().__str__()
+
+DirectedGraph.__str__ = __str__
+del __str__
+
+def __repr__(self):
+    return self.to_matrix().__repr__()
+
+DirectedGraph.__repr__ = __repr__
+del __repr__
 
 CliqueTree.nb_cliques = property(CliqueTree.get_nb_cliques)
 del CliqueTree.get_nb_cliques

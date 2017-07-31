@@ -6,7 +6,8 @@ from SCons.Errors import EnvironmentError
 env = Environment(tools = ['toolchain'])
 
 env.AppendUnique(LIBS=['statiskit_linalg',
-                       'statiskit_core'])
+                       'statiskit_core',
+                       'statiskit_glm'])
 
 VariantDir(os.path.join('build', 'src'), 'src')
 VariantDir(os.path.join('build', 'test'), 'test')
