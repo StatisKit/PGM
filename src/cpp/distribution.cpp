@@ -4,7 +4,323 @@
 namespace statiskit
 {
     namespace pgm
-    {        
+    {      
+        ChordalGaussianDistribution::ChordalGaussianDistribution(const DirectedGraph& graph)
+        {
+            if(graph.has_immorality())
+            { throw parameter_error("graph", "is not equivalent in separation to a chordal undirected graph"); }
+            _graph = graph.copy().release();
+            _sigma = Eigen::VectorXd::Ones(_graph->get_nb_vertices());
+            _predictors.clear();
+            _mu.clear();
+            UnivariateSampleSpace* RR = get_RR().copy().release();
+            for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
+            {
+                const Adjacency& pa = _graph->parents(index);
+                if(pa.size() > 0)
+                {
+                    std::vector< UnivariateSampleSpace* > sample_spaces(pa.size(), RR);
+                    _predictors[index] = new statiskit::glm::CompleteScalarPredictor(VectorSampleSpace(sample_spaces));
+                }
+                else
+                { _mu[index] = 0.; }
+            }
+        }
+
+        ChordalGaussianDistribution::ChordalGaussianDistribution(const ChordalGaussianDistribution& gaussian)
+        {
+            _graph = gaussian._graph->copy().release();
+            _sigma = gaussian._sigma;
+            _mu = gaussian._mu;
+            _predictors.clear();
+            for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
+            {
+                const Adjacency& pa = _graph->parents(index);
+                if(pa.size() > 0)
+                {
+                    std::unordered_map< Index, statiskit::glm::ScalarPredictor* >::const_iterator it = gaussian._predictors.find(index);
+                    _predictors[index] = it->second->copy().release();
+                }
+            }
+        }
+
+        ChordalGaussianDistribution::~ChordalGaussianDistribution()
+        {
+            for(Index index = 0, max_index = _graph->get_nb_vertices(); index < max_index; ++index)
+            {
+                const Adjacency& pa = _graph->parents(index);
+                if(pa.size() > 0)
+                {
+                    delete _predictors[index];
+                    _predictors[index] = nullptr;
+                }
+            }
+            _predictors.clear();
+            delete _graph;
+            _graph = nullptr;
+        }
+
+        Index ChordalGaussianDistribution::get_nb_components() const
+        { return _graph->get_nb_vertices(); }
+
+        unsigned int ChordalGaussianDistribution::get_nb_parameters() const
+        { return _graph->get_nb_vertices() + _graph->get_nb_edges(); } 
+
+        double ChordalGaussianDistribution::probability(const MultivariateEvent* event, const bool& logarithm) const
+        {
+            double p;
+            if(event)
+            {
+                if(event->size() == get_nb_components())
+                {
+                    for(Index index = 0, max_index = get_nb_components(); index < max_index; ++index)
+                    {
+                        const Adjacency& pa = _graph->parents(index);
+                        if(pa.size() > 0)
+                        {
+                            VectorEvent mevent = VectorEvent(pa.size());
+                            for(Adjacency::const_iterator it = pa.cbegin(), it_end = pa.cend(); it != it_end; ++it)
+                            { mevent.set(std::distance(pa.cbegin(), it), *(event->get(*it))); }
+                            std::unordered_map< Index, statiskit::glm::ScalarPredictor* >::const_iterator it = _predictors.find(index);
+                            NormalDistribution normal((*(it->second))(mevent), _sigma[index]);
+                            p += normal.probability(event->get(index), true);
+                        }
+                        else
+                        {
+                            std::unordered_map< Index, double >::const_iterator it = _mu.find(index);
+                            NormalDistribution normal(it->second, _sigma[index]);
+                            p += normal.probability(event->get(index), true);
+                        }
+                    }
+                    if(!logarithm)
+                    { p =  exp(p); }
+                }
+                else
+                { p = std::numeric_limits< double >::quiet_NaN(); }
+            }
+            else if(logarithm)
+            { p = 0.; }
+            else
+            { p = 1.; }
+            return p;
+        }
+
+        std::unique_ptr< MultivariateEvent > ChordalGaussianDistribution::simulate() const
+        {
+            std::unique_ptr< VectorEvent > event = std::make_unique< VectorEvent >(get_nb_components());
+            std::vector< Index > order = _graph->depth_first_search();
+            for(Index index = 0, max_index = get_nb_components(); index < max_index; ++index)
+            {
+                const Adjacency& pa = _graph->parents(index);
+                if(pa.size() > 0)
+                {
+                    VectorEvent mevent = VectorEvent(pa.size());
+                    for(Adjacency::const_iterator it = pa.cbegin(), it_end = pa.cend(); it != it_end; ++it)
+                    { mevent.set(std::distance(pa.cbegin(), it), *(event->get(*it))); }
+                    std::unordered_map< Index, statiskit::glm::ScalarPredictor* >::const_iterator it = _predictors.find(index);
+                    NormalDistribution normal((*(it->second))(mevent), _sigma[index]);
+                    event->set(index, *(normal.simulate().get()));
+                }
+                else
+                {
+                    std::unordered_map< Index, double >::const_iterator it = _mu.find(index);
+                    NormalDistribution normal(it->second, _sigma[index]);
+                    event->set(index, *(normal.simulate().get()));
+                }
+            }
+            return event;
+        }
+
+        const DirectedGraph* ChordalGaussianDistribution::get_graph() const
+        { return _graph; }
+
+        statiskit::glm::ScalarPredictor* ChordalGaussianDistribution::get_predictor(const Index& index) const
+        { 
+            std::unordered_map< Index, statiskit::glm::ScalarPredictor* >::const_iterator it = _predictors.find(index);
+            if(it == _predictors.cend())
+            { throw parameter_error("index", "value is not valid"); }
+            return it->second;
+        }
+
+        void ChordalGaussianDistribution::set_predictor(const Index& index, const statiskit::glm::ScalarPredictor& predictor)
+        {
+            std::unordered_map< Index, statiskit::glm::ScalarPredictor* >::iterator it = _predictors.find(index);
+            if(it == _predictors.end())
+            { throw parameter_error("index", "value is not valid"); }
+            else
+            {
+                delete it->second;
+                it->second = predictor.copy().release();
+            }
+        }
+
+        double ChordalGaussianDistribution::get_mu(const Index& index) const
+        { 
+            std::unordered_map< Index, double >::const_iterator it = _mu.find(index);
+            if(it == _mu.cend())
+            { throw parameter_error("index", "value is not valid"); }
+            return it->second;
+        }
+
+        void ChordalGaussianDistribution::set_mu(const Index& index, const double& mu)
+        {
+            std::unordered_map< Index, double >::iterator it = _mu.find(index);
+            if(it == _mu.end())
+            { throw parameter_error("index", "value is not valid"); }
+            else
+            { it->second = mu; }
+        }
+
+        const Eigen::VectorXd& ChordalGaussianDistribution::get_sigma() const
+        { return _sigma; } 
+
+        void ChordalGaussianDistribution::set_sigma(const Eigen::VectorXd& sigma)
+        {
+            if(sigma.size() != get_nb_components())
+            { throw size_error("sigma", sigma.size(), get_nb_components(), size_error::equal); }
+            if(sigma.minCoeff() <= 0)
+            { throw lower_bound_error("sigma", sigma, 0, true); }
+            _sigma = sigma;
+        }
+
+        ChordalGaussianDistributionMLEstimation::ChordalGaussianDistributionMLEstimation()
+        {}
+
+        ChordalGaussianDistributionMLEstimation::ChordalGaussianDistributionMLEstimation(ChordalGaussianDistribution const * estimated, MultivariateData const * data) : ActiveEstimation< ChordalGaussianDistribution, ContinuousMultivariateDistributionEstimation >(estimated, data)
+        {}
+
+        ChordalGaussianDistributionMLEstimation::ChordalGaussianDistributionMLEstimation(const ChordalGaussianDistributionMLEstimation& estimation) : ActiveEstimation< ChordalGaussianDistribution, ContinuousMultivariateDistributionEstimation >(estimation)
+        {}
+
+        ChordalGaussianDistributionMLEstimation::~ChordalGaussianDistributionMLEstimation()
+        {}
+
+        ChordalGaussianDistributionMLEstimation::Estimator::Estimator()
+        {
+            _graph = nullptr;
+            _solver = statiskit::linalg::solver_type::colPivHouseholderQr;
+        }
+
+        ChordalGaussianDistributionMLEstimation::Estimator::Estimator(const Estimator& estimator)
+        {
+            _graph = estimator._graph->copy().release();
+            _solver = estimator._solver;
+        }
+
+        ChordalGaussianDistributionMLEstimation::Estimator::~Estimator()
+        {
+            if(_graph)
+            { delete _graph; }
+        }
+
+        std::unique_ptr< MultivariateDistributionEstimation > ChordalGaussianDistributionMLEstimation::Estimator::operator() (const MultivariateData& data, const bool& lazy) const
+        {
+            if(!_graph)
+            { throw member_error("graph", "you must give a graph to infer a graphical Gaussian distribution"); }
+            const MultivariateSampleSpace* sample_space = data.get_sample_space();
+            if(_graph->get_nb_vertices() != sample_space->size())
+            { throw parameter_error("data", "must have the same number of components as the number of vertices in the given graph"); }
+            for(Index index = 0, max_index = sample_space->size(); index < max_index; ++index)
+            {
+                if(sample_space->get(index)->get_outcome() != CONTINUOUS)
+                { throw sample_space_error(CONTINUOUS); }
+            }
+            ChordalGaussianDistribution* estimated = new ChordalGaussianDistribution(*_graph);
+            Eigen::VectorXd sigma = Eigen::VectorXd::Zero(_graph->get_nb_vertices());
+            Eigen::VectorXd w = Eigen::VectorXd::Ones(data.size());
+            std::unique_ptr< MultivariateData::Generator > generator = data.generator();
+            Index index = 0;
+            while(generator->is_valid())
+            { 
+                w(index) = generator->weight();
+                ++(*generator);
+                ++index;
+            }
+            for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
+            {
+                const Adjacency& pa = _graph->parents(u);
+                if(pa.size() > 0)
+                {
+                    std::unique_ptr< MultivariateData > _data = data.extract(Indices(pa.begin(), pa.end()));
+                    const MultivariateSampleSpace* sample_space = _data->get_sample_space();
+                    Eigen::MatrixXd X = Eigen::MatrixXd::Ones(_data->size(), 1 + sample_space->encode());
+                    std::unique_ptr< MultivariateData::Generator > generator = _data->generator();
+                    Index index = 0;
+                    while(generator->is_valid())
+                    {
+                        const MultivariateEvent* event = generator->event();
+                        if(event)
+                        { X.block(index, 1, 1, X.cols()-1) = sample_space->encode(*event); }
+                        else
+                        { X.block(index, 1, 1, X.cols()-1) = std::numeric_limits< double >::quiet_NaN() * Eigen::VectorXd::Ones(X.cols() - 1).transpose(); }
+                        ++(*generator);
+                        ++index;
+                    }
+                    Eigen::VectorXd y = compute_y(data, u);
+                    Eigen::VectorXd beta = solve((X.transpose() * w.asDiagonal() * X).eval(), (X.transpose() * w.asDiagonal() * y).eval(), _solver);
+                    Eigen::VectorXd epsilon = y - X * beta;
+                    sigma(u) = sqrt(epsilon.cwiseProduct(epsilon).cwiseProduct(w).mean());
+                    statiskit::glm::ScalarPredictor* predictor = estimated->get_predictor(u);
+                    predictor->set_beta(beta);
+                }
+                else
+                {
+                    Eigen::VectorXd y = compute_y(data, u);
+                    double mu = y.cwiseProduct(w).mean();
+                    Eigen::VectorXd epsilon = y - Eigen::MatrixXd::Constant(y.size(), 1, mu);
+                    sigma(u) = sqrt(epsilon.cwiseProduct(epsilon).cwiseProduct(w).mean());
+                    estimated->set_mu(u, mu);
+                }
+            }
+            estimated->set_sigma(sigma);
+            std::unique_ptr< MultivariateDistributionEstimation > estimation;
+            if(lazy)
+            { estimation = std::make_unique< LazyEstimation< ChordalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+            else
+            { estimation = std::make_unique< ChordalGaussianDistributionMLEstimation >(estimated, &data); }
+            return estimation;
+        }
+
+        std::unique_ptr< MultivariateDistributionEstimation::Estimator > ChordalGaussianDistributionMLEstimation::Estimator::copy() const
+        { return std::make_unique< Estimator >(*this); }
+
+        const statiskit::linalg::solver_type& ChordalGaussianDistributionMLEstimation::Estimator::get_solver() const
+        { return _solver; }
+
+        void ChordalGaussianDistributionMLEstimation::Estimator::set_solver(const statiskit::linalg::solver_type& solver)
+        { _solver = solver; }
+
+        const DirectedGraph* ChordalGaussianDistributionMLEstimation::Estimator::get_graph() const
+        { return _graph; }
+
+        void ChordalGaussianDistributionMLEstimation::Estimator::set_graph(const DirectedGraph& graph)
+        { 
+            if(graph.has_immorality())
+            { throw parameter_error("graph", "mustn't have immoralities"); }
+            if(_graph)
+            { delete _graph; }
+            _graph = graph.copy().release(); 
+        }
+
+        Eigen::VectorXd ChordalGaussianDistributionMLEstimation::Estimator::compute_y(const MultivariateData& data, const Index& u) const
+        {
+            std::unique_ptr< UnivariateData > _data = data.extract(u);
+            Eigen::VectorXd y = Eigen::VectorXd::Ones(_data->size());
+            std::unique_ptr< UnivariateData::Generator > generator = _data->generator();
+            Index index = 0;
+            while(generator->is_valid())
+            {
+                const UnivariateEvent* event = generator->event();
+                if(event && event->get_event() == ELEMENTARY)
+                { y(index) = static_cast< const ContinuousElementaryEvent* >(event)->get_value(); }
+                else
+                { y(index) = std::numeric_limits< double >::quiet_NaN(); }
+                ++(*generator);
+                ++index;
+            }
+            return y;
+        }
+
         GraphicalGaussianDistribution::GraphicalGaussianDistribution(const Eigen::VectorXd& mu)
         {
             _mu = mu;
@@ -375,9 +691,9 @@ namespace statiskit
                 prev = curr;
                 for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
                 {
-                    Neighbours ne = _graph->neighbours(u);
+                    Adjacency ne = _graph->neighbours(u);
                     ne.insert(u);
-                    for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                    for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                     {
                         if(*itv <= u)
                         {
@@ -467,8 +783,8 @@ namespace statiskit
             { estimation = std::make_unique< GraphicalGaussianDistributionIMLEstimation >(estimated, &data); }
             for(Index u = 0, max_u = _graph->get_nb_vertices(); u < max_u; ++u)
             {
-                const Neighbours& ne = _graph->neighbours(u);
-                for(Neighbours::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
+                const Adjacency& ne = _graph->neighbours(u);
+                for(Adjacency::const_iterator itv = ne.begin(), itv_end = ne.end(); itv != itv_end; ++itv)
                 {
                     if(*itv < u)
                     {

@@ -11,7 +11,7 @@ namespace statiskit
 {
     namespace pgm
     {
-        typedef std::unordered_set< Index > Neighbours;
+        typedef std::unordered_set< Index > Adjacency;
 
         template<class V> class VertexPropertyGraph
         {
@@ -49,7 +49,7 @@ namespace statiskit
         {
             public:
                 PropertyGraph(const Index& vertices);
-                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const Eigen::MatrixXd& matrix);
                 PropertyGraph(const PropertyGraph< G, V, E >& graph);
                 virtual ~PropertyGraph();
 
@@ -63,7 +63,7 @@ namespace statiskit
         {
             public:
                 PropertyGraph(const Index& vertices);
-                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const Eigen::MatrixXd& matrix);
                 PropertyGraph(const PropertyGraph< G, V, void >& graph);
                 virtual ~PropertyGraph();
 
@@ -76,7 +76,7 @@ namespace statiskit
         {
             public:
                 PropertyGraph(const Index& vertices);
-                PropertyGraph(const Eigen::MatrixXd& adjacency);
+                PropertyGraph(const Eigen::MatrixXd& matrix);
                 PropertyGraph(const PropertyGraph< G, void, E >& graph);
                 virtual ~PropertyGraph();
 
@@ -86,12 +86,13 @@ namespace statiskit
         };
 
         class UndirectedForest;
+        class DirectedGraph;
 
         class STATISKIT_PGM_API UndirectedGraph 
         {
             public:
                 UndirectedGraph(const Index& vertices);
-                UndirectedGraph(const Eigen::MatrixXd& adjacency);
+                UndirectedGraph(const Eigen::MatrixXd& matrix);
                 UndirectedGraph(const UndirectedGraph& graph);
                 virtual ~UndirectedGraph();
 
@@ -105,7 +106,7 @@ namespace statiskit
 
                 Index degree(const Index& vertex) const;
 
-                const Neighbours& neighbours(const Index& u) const;
+                const Adjacency& neighbours(const Index& u) const;
 
                 bool are_connected(const Index& u, const Index& v) const;
                 bool are_connected(const Indices& u, const Indices& v) const;
@@ -117,6 +118,8 @@ namespace statiskit
 
                 std::unique_ptr< UndirectedGraph > maximum_cardinality_embedding(const bool& elimination=false) const;
 
+                std::unique_ptr< DirectedGraph > directed_graph() const;
+                
                 std::vector< Index > depth_first_search() const;
 
                 virtual bool is_chordal() const;
@@ -130,9 +133,9 @@ namespace statiskit
                 virtual std::unique_ptr< UndirectedGraph > copy() const;
 
             protected:
-                std::vector< Neighbours > _adjacency;
+                std::vector< Adjacency > _neighbours;
 
-                bool are_connected(const Indices& u, const Indices& v, Neighbours& visited) const;
+                bool are_connected(const Indices& u, const Indices& v, Adjacency& visited) const;
 
                 template<class S> bool is_clique(const S& u) const;
 
@@ -144,7 +147,7 @@ namespace statiskit
         struct STATISKIT_PGM_API UndirectedForest : UndirectedGraph
         {
             UndirectedForest(const Index& vertices);
-            UndirectedForest(const Eigen::MatrixXd& adjacency);
+            UndirectedForest(const Eigen::MatrixXd& matrix);
             UndirectedForest(const UndirectedForest& graph);
             virtual ~UndirectedForest();
 
@@ -172,6 +175,54 @@ namespace statiskit
                 std::vector< Indices > _cliques;
                 std::vector< Indices > _separators;
 
+        };
+
+        class STATISKIT_PGM_API DirectedGraph 
+        {
+            public:
+                DirectedGraph(const Index& vertices);
+                DirectedGraph(const Eigen::MatrixXd& matrix);
+                DirectedGraph(const DirectedGraph& graph);
+                virtual ~DirectedGraph();
+
+                Index get_nb_vertices() const;
+
+                Index get_nb_edges() const;
+
+                bool has_edge(const Index& u, const Index& v) const;
+                virtual void add_edge(const Index& u, const Index& v);
+                void remove_edge(const Index& u, const Index& v);
+
+                Index in_degree(const Index& vertex) const;
+                Index out_degree(const Index& vertex) const;
+
+                const Adjacency& parents(const Index& u) const;
+                Adjacency children(const Index& u) const;
+
+                bool are_weakly_connected(const Index& u, const Index& v) const;
+                bool are_weakly_connected(const Indices& u, const Indices& v) const;
+
+                bool are_separated(const Index& u, const Index& v, const Indices& w) const;
+                bool are_separated(const Indices& u, const Indices& v, const Indices& w) const;
+
+                std::unique_ptr< UndirectedGraph > undirected_graph() const;
+
+                std::unique_ptr< UndirectedGraph > moral_graph() const;
+
+                std::vector< Index > depth_first_search() const;
+
+                virtual bool has_immorality() const;
+                
+                virtual bool is_acyclic() const;
+
+                virtual bool is_weakly_connected() const;
+                
+                double density() const;
+                
+                virtual std::unique_ptr< DirectedGraph > copy() const;
+
+            protected:
+                std::vector< Adjacency > _parents;
         };
     }
 }

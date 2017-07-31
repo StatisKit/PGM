@@ -11,22 +11,30 @@ from statiskit.core.estimation import _estimation, optimization_estimation_decor
 
 import statiskit.pgm._pgm
 from statiskit.pgm.__pgm.statiskit import _OptimizationEstimation
-from statiskit.pgm.__pgm.statiskit.pgm import (GraphicalGaussianDistributionMLEstimation,
+from statiskit.pgm.__pgm.statiskit.pgm import (ChordalGaussianDistributionMLEstimation,
+                                               GraphicalGaussianDistributionMLEstimation,
                                                GraphicalGaussianDistributionIMLEstimation,
                                                GraphicalGaussianDistributionSIMLEstimation)
 
 __all__ = ['graphical_gaussian_estimation']
 
-def graphical_gaussian_estimation(algo='ml', data=None, **kwargs):
+def graphical_gaussian_estimation(algo='NR', data=None, **kwargs):
     """
     """
     return _estimation(algo, 
                        data,
-                       dict(ml = GraphicalGaussianDistributionMLEstimation.Estimator,
-                            cd = GraphicalGaussianDistributionIMLEstimation.CDEstimator,
-                            scd = GraphicalGaussianDistributionSIMLEstimation.CDEstimator,
-                            nr = GraphicalGaussianDistributionIMLEstimation.NREstimator),
+                       dict(CG = ChordalGaussianDistributionMLEstimation.Estimator,
+                            sCG = GraphicalGaussianDistributionMLEstimation.Estimator,
+                            GA = GraphicalGaussianDistributionIMLEstimation.CDEstimator,
+                            sGA = GraphicalGaussianDistributionSIMLEstimation.CDEstimator,
+                            NR = GraphicalGaussianDistributionIMLEstimation.NREstimator),
                        **kwargs)
+
+ChordalGaussianDistributionMLEstimation.Estimator.solver = property(ChordalGaussianDistributionMLEstimation.Estimator.get_solver, ChordalGaussianDistributionMLEstimation.Estimator.set_solver)
+del ChordalGaussianDistributionMLEstimation.Estimator.get_solver, ChordalGaussianDistributionMLEstimation.Estimator.set_solver
+
+ChordalGaussianDistributionMLEstimation.Estimator.graph = property(ChordalGaussianDistributionMLEstimation.Estimator.get_graph, ChordalGaussianDistributionMLEstimation.Estimator.set_graph)
+del ChordalGaussianDistributionMLEstimation.Estimator.get_graph, ChordalGaussianDistributionMLEstimation.Estimator.set_graph
 
 GraphicalGaussianDistributionMLEstimation.Estimator.graph = property(GraphicalGaussianDistributionMLEstimation.Estimator.get_graph, GraphicalGaussianDistributionMLEstimation.Estimator.set_graph)
 del GraphicalGaussianDistributionMLEstimation.Estimator.get_graph, GraphicalGaussianDistributionMLEstimation.Estimator.set_graph

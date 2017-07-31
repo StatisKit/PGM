@@ -96,7 +96,7 @@ namespace statiskit
             {}
 
         template<class G, class V, class E>
-            PropertyGraph< G, V, E >::PropertyGraph(const Eigen::MatrixXd& adjacency) : G(adjacency)
+            PropertyGraph< G, V, E >::PropertyGraph(const Eigen::MatrixXd& matrix) : G(matrix)
             {}
 
         template<class G, class V, class E>
@@ -120,7 +120,7 @@ namespace statiskit
             {}
 
         template<class G, class V>
-            PropertyGraph< G, V, void >::PropertyGraph(const Eigen::MatrixXd& adjacency) : G(adjacency)
+            PropertyGraph< G, V, void >::PropertyGraph(const Eigen::MatrixXd& matrix) : G(matrix)
             {}
 
         template<class G, class V>
@@ -140,7 +140,7 @@ namespace statiskit
             {}
 
         template<class G, class E>
-            PropertyGraph< G, void , E >::PropertyGraph(const Eigen::MatrixXd& adjacency) : G(adjacency)
+            PropertyGraph< G, void , E >::PropertyGraph(const Eigen::MatrixXd& matrix) : G(matrix)
             {}
 
         template<class G, class E>
