@@ -34,7 +34,6 @@ class TestGraphicalGaussianDistribution(unittest.TestCase):
         self.assertTrue(graph.has_edge(1, 2))
         self.assertFalse(graph.has_edge(0, 2))
 
-    @attr(osx = False)
     def test_cge(self):
         """Test graphical Gaussian distribution chordal ML estimation"""
         cge = pgm.graphical_gaussian_estimation('CG', self._data, graph=self._dist.graph.directed_graph)
