@@ -39,11 +39,6 @@ class TestGraphicalGaussianDistribution(unittest.TestCase):
         cge = pgm.graphical_gaussian_estimation('CG', self._data, graph=self._dist.graph.directed_graph)
         self.assertGreaterEqual(cge.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
 
-    def test_scge(self):
-        """Test graphical Gaussian distribution sparse chordal ML estimation"""
-        scge = pgm.graphical_gaussian_estimation('sCG', self._data, graph=self._dist.graph)
-        self.assertGreaterEqual(scge.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
-
     def test_nre(self):
         """Test graphical Gaussian distribution estimation using Newton-Raphson algorithm"""
         nre = pgm.graphical_gaussian_estimation('NR', self._data, graph=self._dist.graph)
