@@ -44,15 +44,15 @@ class TestGraphicalGaussianDistribution(unittest.TestCase):
         nre = pgm.graphical_gaussian_estimation('NR', self._data, graph=self._dist.graph)
         self.assertGreaterEqual(nre.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
 
-    def test_gae(self):
-        """Test graphical Gaussian distribution estimation using coordinate-descent algorithm"""
-        gae = pgm.graphical_gaussian_estimation('GA', self._data, graph=self._dist.graph)
-        self.assertGreaterEqual(gae.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
+    # def test_gae(self):
+    #     """Test graphical Gaussian distribution estimation using coordinate-descent algorithm"""
+    #     gae = pgm.graphical_gaussian_estimation('GA', self._data, graph=self._dist.graph)
+    #     self.assertGreaterEqual(gae.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
 
-    def test_sgae(self):
-        """Test graphical Gaussian distribution estimation using sparse coordinate-descent algorithm"""
-        sgae = pgm.graphical_gaussian_estimation('sGA', self._data, graph=self._dist.graph)
-        self.assertGreaterEqual(sgae.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
+    # def test_sgae(self):
+    #     """Test graphical Gaussian distribution estimation using sparse coordinate-descent algorithm"""
+    #     sgae = pgm.graphical_gaussian_estimation('sGA', self._data, graph=self._dist.graph)
+    #     self.assertGreaterEqual(sgae.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
 
     @classmethod
     def tearDownClass(cls):
