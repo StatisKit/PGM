@@ -504,34 +504,6 @@ namespace statiskit
                 S[index + 1] = diff;
                 U[index + 1] = clique_tree.get_separator(index);
             }
-            // Eigen::MatrixXd X = Sigma;
-            // for(Index index = clique_tree.get_nb_cliques(), min_index = 1; index > min_index; --index)
-            // {
-            //     submatrix(X,
-            //               U[index - 1],
-            //               S[index - 1],
-            //               submatrix(X,
-            //                         U[index - 1], //clique_tree.get_separator(index - 1),
-            //                         S[index - 1]) //clique_tree.get_clique(index - 1))
-            //                   * submatrix(X,
-            //                               S[index - 1], //clique_tree.get_clique(index - 1),
-            //                               S[index - 1]).inverse());//clique_tree.get_clique(index - 1)).inverse());
-            //     submatrix(X,
-            //               U[index - 1], //clique_tree.get_separator(index - 1),
-            //               U[index - 1], //clique_tree.get_separator(index - 1),
-            //               submatrix(X,
-            //                         U[index - 1], //clique_tree.get_separator(index - 1),
-            //                         U[index - 1])//clique_tree.get_separator(index - 1))
-            //                  - submatrix(X,
-            //                              U[index - 1], //clique_tree.get_separator(index - 1),
-            //                              S[index - 1])//clique_tree.get_clique(index - 1))
-            //                  * submatrix(X,
-            //                              S[index - 1], //clique_tree.get_clique(index - 1),
-            //                              S[index - 1]).inverse() //clique_tree.get_clique(index - 1)).inverse()
-            //                  * submatrix(X,
-            //                              U[index - 1], //clique_tree.get_separator(index - 1),
-            //                              S[index - 1]).transpose()); //clique_tree.get_clique(index - 1)).transpose());  
-            // }
             Eigen::MatrixXd D = Eigen::MatrixXd::Zero(Sigma.rows(), Sigma.cols());
             submatrix(D,
                       S[0],
@@ -542,10 +514,10 @@ namespace statiskit
             for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             { 
                 submatrix(D,
-                          S[index], //clique_tree.get_clique(index),
-                          S[index], //clique_tree.get_clique(index),
+                          S[index],
+                          S[index],
                           submatrix(Sigma,
-                                    S[index], //clique_tree.get_clique(index),
+                                    S[index],
                                     S[index])
                           - submatrix(Sigma,
                                       S[index],
@@ -555,7 +527,7 @@ namespace statiskit
                                       U[index]).inverse()
                           * submatrix(Sigma,
                                       U[index],
-                                      S[index])); //clique_tree.get_clique(index)));
+                                      S[index]));
             }
             Eigen::MatrixXd K = D.inverse();
             GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
@@ -567,38 +539,38 @@ namespace statiskit
             for(Index index = 1, max_index = clique_tree.get_nb_cliques(); index < max_index; ++index)
             {
                 submatrix(K,
-                          S[index], //clique_tree.get_clique(index),
-                          U[index], //clique_tree.get_separator(index),
+                          S[index],
+                          U[index],
                           - submatrix(K,
-                                      S[index], //clique_tree.get_clique(index),
-                                      S[index]) //clique_tree.get_clique(index))
+                                      S[index],
+                                      S[index])
                           * submatrix(Sigma,
-                                      S[index], //clique_tree.get_clique(index),
-                                      U[index]) //clique_tree.get_separator(index))
+                                      S[index],
+                                      U[index])
                           * submatrix(Sigma,
-                                      U[index], //clique_tree.get_separator(index),
-                                      U[index]).inverse());//clique_tree.get_separator(index)));
+                                      U[index],
+                                      U[index]).inverse());
                 submatrix(K,
-                          U[index], //clique_tree.get_separator(index),
-                          S[index], //clique_tree.get_clique(index),
+                          U[index],
+                          S[index],
                           submatrix(K,
-                                    S[index], //clique_tree.get_clique(index),
-                                    U[index]).transpose()); //clique_tree.get_separator(index)).transpose());
+                                    S[index],
+                                    U[index]).transpose());
                 submatrix(K,
-                          U[index], //clique_tree.get_separator(index),
-                          U[index], //clique_tree.get_separator(index),
+                          U[index],
+                          U[index],
                           submatrix(K,
-                                    U[index], //clique_tree.get_separator(index),
-                                    U[index]) //clique_tree.get_separator(index))
+                                    U[index],
+                                    U[index])
                           + submatrix(K,
-                                      S[index], //clique_tree.get_separator(index),
-                                      U[index]).transpose() //clique_tree.get_clique(index))
+                                      S[index],
+                                      U[index]).transpose()
                           * submatrix(K,
-                                      S[index], //clique_tree.get_clique(index),
-                                      S[index]).inverse() //clique_tree.get_clique(index)).inverse()
+                                      S[index],
+                                      S[index]).inverse()
                           * submatrix(K,
-                                      S[index], //clique_tree.get_clique(index),
-                                      U[index])); //clique_tree.get_separator(index)));
+                                      S[index],
+                                      U[index]));
             }
             estimated->set_theta(K);
             return std::move(estimation);
