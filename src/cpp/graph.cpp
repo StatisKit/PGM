@@ -109,6 +109,7 @@ namespace statiskit
             { non_colored.insert(non_colored.end(), u); }
             while(non_colored.size() > 0)
             {
+
                 Index u = distance(w.begin(), std::max_element(w.begin(), w.end()));
                 rank[u] = non_colored.size() - 1;
                 for(Adjacency::const_iterator it = non_colored.begin(), it_end = non_colored.end(); it != it_end; ++it)
@@ -174,7 +175,8 @@ namespace statiskit
         {
             if(!is_chordal())
             { throw not_implemented_error("directed_graph"); }
-            std::vector< Index> order = depth_first_search();
+            std::vector< Index > order = rank_to_ordering(maximum_cardinality_search());
+            std::reverse(order.begin(), order.end());
             std::unique_ptr< DirectedGraph > graph = std::make_unique< DirectedGraph >(get_nb_vertices());
             Adjacency colored;
             for(Index u = 0, max_u = get_nb_vertices(); u < max_u; ++u)
@@ -652,8 +654,6 @@ namespace statiskit
                     {
                         if(u != v && v != w && u != w)
                         { has = has_edge(u, w) && has_edge(v, w) && !(has_edge(u, v) || has_edge(v, u)); }
-                        if(has)
-                        { std::cout << u << " " << v << " " << w << std::endl;}
                         ++w;
                     }
                     ++v;
