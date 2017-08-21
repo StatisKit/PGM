@@ -19,6 +19,7 @@ class TestDirectedGaussianDistribution(unittest.TestCase):
         """Test graphical Gaussian distribution construction"""
         graph = pgm.DirectedGraph(3)
         graph.add_edge(0, 1)
+        print graph.depth_first_search()
         cls._dist = pgm.DirectedGaussianDistribution(graph)
         cls._dist.predictors[1].delta = linalg.Vector((-1.,))
         cls._data = cls._dist.simulation(10)
