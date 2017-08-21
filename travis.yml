@@ -10,7 +10,7 @@ services:
   - docker
   
 env:
- # - CONDA_RECIPE=libstatiskit_pgm
+ - CONDA_RECIPE=libstatiskit_pgm
  - CONDA_RECIPE=python-statiskit_pgm
     
 install:
