@@ -6,7 +6,7 @@ namespace statiskit
     namespace pgm
     {
         template<class M>
-            std::unique_ptr< MultivariateDistributionEstimation > GraphicalGaussianDistributionSIMLEstimation::CDEstimator::compute(const MultivariateData& data, const bool& lazy) const
+            std::unique_ptr< MultivariateDistributionEstimation > UndirectedGaussianDistributionSIMLEstimation::GAEstimator::compute(const MultivariateData& data, const bool& lazy) const
             {
                 if(!_graph)
                 { throw member_error("graph", "you must give a graph to infer a graphical Gaussian distribution"); }
@@ -23,7 +23,7 @@ namespace statiskit
                 NaturalCovarianceMatrixEstimation::Estimator covariance_estimator = NaturalCovarianceMatrixEstimation::Estimator();
                 std::unique_ptr< CovarianceMatrixEstimation > covariance_estimation = covariance_estimator(data, mean_estimation->get_mean());
                 Eigen::MatrixXd S = covariance_estimation->get_covariance(), I = Eigen::VectorXd::Ones(_graph->get_nb_vertices()).asDiagonal();
-                Eigen::SparseMatrix< double > K = Eigen::SparseMatrix< double >(_graph->get_nb_vertices(), _graph->get_nb_vertices());
+                Eigen::SparseMatrix< double > T, K = Eigen::SparseMatrix< double >(_graph->get_nb_vertices(), _graph->get_nb_vertices());
                 Eigen::VectorXi entries = Eigen::VectorXi::Zero(_graph->get_nb_vertices());
                 switch(_inverser)
                 {
@@ -84,13 +84,13 @@ namespace statiskit
                 unsigned int its = 0;
                 double max;
                 std::unique_ptr< MultivariateDistributionEstimation > estimation;
-                GraphicalGaussianDistribution* estimated = new GraphicalGaussianDistribution(mean_estimation->get_mean());
+                UndirectedGaussianDistribution* estimated = new UndirectedGaussianDistribution(mean_estimation->get_mean());
                 if(lazy)
-                { estimation = std::make_unique< LazyEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
+                { estimation = std::make_unique< LazyEstimation< UndirectedGaussianDistribution, ContinuousMultivariateDistributionEstimation > >(estimated); }
                 else
                 { 
-                    estimation = std::make_unique< GraphicalGaussianDistributionSIMLEstimation >(estimated, &data);
-                    static_cast< GraphicalGaussianDistributionSIMLEstimation* >(estimation.get())->_iterations.push_back(K);
+                    estimation = std::make_unique< UndirectedGaussianDistributionSIMLEstimation >(estimated, &data);
+                    static_cast< UndirectedGaussianDistributionSIMLEstimation* >(estimation.get())->_iterations.push_back(K);
                 }
                 do
                 {
@@ -123,34 +123,39 @@ namespace statiskit
                                     else
                                     { s *= roots.first; }
                                 }
-                                switch(_inverser)
+                                if(boost::math::isfinite(s))
                                 {
-                                    case statiskit::linalg::simplicialLLT:
-                                    case statiskit::linalg::simplicialLDLT:
-                                    case statiskit::linalg::conjugateGradient:
-                                        if(*itv == u)
-                                        { s *= 2; }
-                                        K.coeffRef(u, *itv) += s;
-                                        break;
-                                    case statiskit::linalg::sparseLU:
-                                    case statiskit::linalg::sparseQR:
-                                    case statiskit::linalg::leastSquaresConjugateGradient:
-                                    case statiskit::linalg::biCGSTAB:
-                                        K.coeffRef(u, *itv) += s;
-                                        K.coeffRef(*itv, u) += s;
-                                        break;
+                                    switch(_inverser)
+                                    {
+                                        case statiskit::linalg::simplicialLLT:
+                                        case statiskit::linalg::simplicialLDLT:
+                                        case statiskit::linalg::conjugateGradient:
+                                            if(*itv == u)
+                                            { s *= 2; }
+                                            K.coeffRef(u, *itv) += s;
+                                            break;
+                                        case statiskit::linalg::sparseLU:
+                                        case statiskit::linalg::sparseQR:
+                                        case statiskit::linalg::leastSquaresConjugateGradient:
+                                        case statiskit::linalg::biCGSTAB:
+                                            K.coeffRef(u, *itv) += s;
+                                            K.coeffRef(*itv, u) += s;
+                                            break;
+                                    }
+                                    Solver.factorize(K);
                                 }
-                                Solver.factorize(K);
                             }
                         }
                     }
                     determinant = Solver.determinant();
                     curr = log(determinant) - (K.selfadjointView< Eigen::Lower >() * S).trace();
                     if(!lazy)
-                    { static_cast< GraphicalGaussianDistributionSIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
+                    { static_cast< UndirectedGaussianDistributionSIMLEstimation* >(estimation.get())->_iterations.push_back(K); }
+                    if(curr > prev)
+                    { T = K; }
                     ++its;
                 } while(run(its, __impl::reldiff(prev, curr)) && curr > prev);
-                estimated->set_theta(K.selfadjointView< Eigen::Lower >() * I);
+                estimated->set_theta(T.selfadjointView< Eigen::Lower >() * I);
                 return std::move(estimation);
             }
     }

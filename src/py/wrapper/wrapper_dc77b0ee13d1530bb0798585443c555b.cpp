@@ -29,14 +29,14 @@ void wrapper_dc77b0ee13d1530bb0798585443c555b()
     boost::python::object module_371d94ac4c135d82a973fb39a0a6d037(boost::python::handle<  >(boost::python::borrowed(PyImport_AddModule(name_371d94ac4c135d82a973fb39a0a6d037.c_str()))));
     boost::python::scope().attr("pgm") = module_371d94ac4c135d82a973fb39a0a6d037;
     boost::python::scope scope_371d94ac4c135d82a973fb39a0a6d037 = module_371d94ac4c135d82a973fb39a0a6d037;
-    boost::python::class_< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation, autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation >::Type, boost::python::bases< class ::statiskit::ActiveEstimation< class ::statiskit::pgm::ChordalGaussianDistribution, struct ::statiskit::ContinuousMultivariateDistributionEstimation > > > class_dc77b0ee13d1530bb0798585443c555b("ChordalGaussianDistributionMLEstimation", "", boost::python::no_init);
+    boost::python::class_< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation, autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation >::Type, boost::python::bases< class ::statiskit::ActiveEstimation< class ::statiskit::pgm::UndirectedGaussianDistribution, struct ::statiskit::ContinuousMultivariateDistributionEstimation > > > class_dc77b0ee13d1530bb0798585443c555b("ChordalGaussianDistributionMLEstimation", "", boost::python::no_init);
     class_dc77b0ee13d1530bb0798585443c555b.def(boost::python::init<  >(""));
-    class_dc77b0ee13d1530bb0798585443c555b.def(boost::python::init< class ::statiskit::pgm::ChordalGaussianDistribution const *, struct ::statiskit::MultivariateData const * >(""));
+    class_dc77b0ee13d1530bb0798585443c555b.def(boost::python::init< class ::statiskit::pgm::UndirectedGaussianDistribution const *, struct ::statiskit::MultivariateData const * >(""));
     class_dc77b0ee13d1530bb0798585443c555b.def(boost::python::init< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation const & >(""));
 
     if(autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation >::is_class)
     {
-        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation >::Type, autowig::Held< class ::statiskit::ActiveEstimation< class ::statiskit::pgm::ChordalGaussianDistribution, struct ::statiskit::ContinuousMultivariateDistributionEstimation > >::Type >();
+        boost::python::implicitly_convertible< autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation >::Type, autowig::Held< class ::statiskit::ActiveEstimation< class ::statiskit::pgm::UndirectedGaussianDistribution, struct ::statiskit::ContinuousMultivariateDistributionEstimation > >::Type >();
     }
 
 }

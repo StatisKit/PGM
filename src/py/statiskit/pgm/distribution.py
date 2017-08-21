@@ -1,13 +1,13 @@
 from functools import wraps
 
 import _pgm
-from __pgm.statiskit.pgm import (ChordalGaussianDistribution,
-                                 GraphicalGaussianDistribution)
+from __pgm.statiskit.pgm import (DirectedGaussianDistribution,
+                                 UndirectedGaussianDistribution)
 
 from statiskit import linalg
 
-__all__ = ['ChordalGaussianDistribution',
-           'GraphicalGaussianDistribution']
+__all__ = ['DirectedGaussianDistribution',
+           'UndirectedGaussianDistribution']
 
 class Mu(object):
 
@@ -36,10 +36,10 @@ def wrapper(f, g):
 
     return __getitem__, __setitem__
 
-Mu.__getitem__, Mu.__setitem__ = wrapper(ChordalGaussianDistribution.get_mu, ChordalGaussianDistribution.set_mu)
-del ChordalGaussianDistribution.get_mu, ChordalGaussianDistribution.set_mu
+Mu.__getitem__, Mu.__setitem__ = wrapper(DirectedGaussianDistribution.get_mu, DirectedGaussianDistribution.set_mu)
+del DirectedGaussianDistribution.get_mu, DirectedGaussianDistribution.set_mu
 
-ChordalGaussianDistribution.mu = property(Mu)
+DirectedGaussianDistribution.mu = property(Mu)
 
 class Predictors(object):
 
@@ -67,25 +67,25 @@ def wrapper(f, g):
 
     return __getitem__, __setitem__
 
-Predictors.__getitem__, Predictors.__setitem__ = wrapper(ChordalGaussianDistribution.get_predictor, ChordalGaussianDistribution.set_predictor)
-del ChordalGaussianDistribution.get_predictor, ChordalGaussianDistribution.set_predictor
+Predictors.__getitem__, Predictors.__setitem__ = wrapper(DirectedGaussianDistribution.get_predictor, DirectedGaussianDistribution.set_predictor)
+del DirectedGaussianDistribution.get_predictor, DirectedGaussianDistribution.set_predictor
 
-ChordalGaussianDistribution.predictors = property(Predictors)
+DirectedGaussianDistribution.predictors = property(Predictors)
 
-ChordalGaussianDistribution.sigma = property(ChordalGaussianDistribution.get_sigma, ChordalGaussianDistribution.set_sigma)
-del ChordalGaussianDistribution.get_sigma, ChordalGaussianDistribution.set_sigma
+DirectedGaussianDistribution.sigma = property(DirectedGaussianDistribution.get_sigma, DirectedGaussianDistribution.set_sigma)
+del DirectedGaussianDistribution.get_sigma, DirectedGaussianDistribution.set_sigma
 
-ChordalGaussianDistribution.graph = property(ChordalGaussianDistribution.get_graph)
-del ChordalGaussianDistribution.get_graph
+DirectedGaussianDistribution.graph = property(DirectedGaussianDistribution.get_graph)
+del DirectedGaussianDistribution.get_graph
 
-GraphicalGaussianDistribution.mu = property(GraphicalGaussianDistribution.get_mu, GraphicalGaussianDistribution.set_mu)
-del GraphicalGaussianDistribution.get_mu, GraphicalGaussianDistribution.set_mu
+UndirectedGaussianDistribution.mu = property(UndirectedGaussianDistribution.get_mu, UndirectedGaussianDistribution.set_mu)
+del UndirectedGaussianDistribution.get_mu, UndirectedGaussianDistribution.set_mu
 
-GraphicalGaussianDistribution.theta = property(GraphicalGaussianDistribution.get_theta, GraphicalGaussianDistribution.set_theta)
-del GraphicalGaussianDistribution.get_theta, GraphicalGaussianDistribution.set_theta
+UndirectedGaussianDistribution.theta = property(UndirectedGaussianDistribution.get_theta, UndirectedGaussianDistribution.set_theta)
+del UndirectedGaussianDistribution.get_theta, UndirectedGaussianDistribution.set_theta
 
-GraphicalGaussianDistribution.sigma = property(GraphicalGaussianDistribution.get_sigma)
-del GraphicalGaussianDistribution.get_sigma
+UndirectedGaussianDistribution.sigma = property(UndirectedGaussianDistribution.get_sigma)
+del UndirectedGaussianDistribution.get_sigma
 
-GraphicalGaussianDistribution.graph = property(GraphicalGaussianDistribution.get_graph)
-del GraphicalGaussianDistribution.get_graph
+UndirectedGaussianDistribution.graph = property(UndirectedGaussianDistribution.get_graph)
+del UndirectedGaussianDistribution.get_graph
