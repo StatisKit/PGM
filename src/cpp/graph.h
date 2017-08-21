@@ -223,6 +223,8 @@ namespace statiskit
 
             protected:
                 std::vector< Adjacency > _parents;
+
+                void depth_first_visit(const Index& u, Adjacency& non_colored, std::vector< Index >& order) const;
         };
     }
 }

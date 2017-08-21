@@ -610,7 +610,7 @@ namespace statiskit
 
         std::vector< Index > DirectedGraph::depth_first_search() const
         {
-            std::vector< Index > order(get_nb_vertices());
+            std::vector< Index > order = std::vector< Index >();//(get_nb_vertices());
             Adjacency non_colored;
             Index u , v = get_nb_vertices();
             for(u = 0; u < v; ++u)
@@ -618,23 +618,26 @@ namespace statiskit
             while(non_colored.size() > 0)
             {
                 u = *(non_colored.begin());
-                std::vector< Index > stack = std::vector< Index >();
-                stack.push_back(u);
-                while(stack.size() > 0)
-                {
-                    u = stack.back();
-                    stack.pop_back();
-                    if(non_colored.find(u) != non_colored.end())
-                    {
-                        order[v - non_colored.size()] = u;
-                        non_colored.erase(u);
-                        for(Adjacency::const_iterator it = _parents[u].begin(), it_end = _parents[u].end(); it != it_end; ++it)
-                        { 
-                            if(non_colored.find(*it) != non_colored.end())
-                            { stack.push_back(*it); }
-                        }
-                    }
-                }
+                non_colored.erase(u);
+                depth_first_visit(u, non_colored, order);
+                // std::vector< Index > stack = std::vector< Index >();
+                // stack.push_back(u);
+                // while(stack.size() > 0)
+                // {
+                //     u = stack.back();
+                //     stack.pop_back();
+                //     if(non_colored.find(u) != non_colored.end())
+                //     {
+                //         order[v - non_colored.size()] = u;
+                //         non_colored.erase(u);
+                //         for(Adjacency::const_iterator it = _parents[u].begin(), it_end = _parents[u].end(); it != it_end; ++it)
+                //         { 
+                //             if(non_colored.find(*it) != non_colored.end())
+                //             { stack.push_back(*it); }
+                //         }
+                //     }
+                // }
+
             }
             std::reverse(order.begin(), order.end());
             return order;
@@ -666,7 +669,7 @@ namespace statiskit
         bool DirectedGraph::is_acyclic() const
         {
             std::vector< Index > order = depth_first_search();
-            std::reverse(order.begin(), order.end());
+            // std::reverse(order.begin(), order.end());
             std::unordered_set< Index > colored;
             bool is = true;
             Index u = 0, max_u = get_nb_vertices();
@@ -715,5 +718,18 @@ namespace statiskit
 
         std::unique_ptr< DirectedGraph > DirectedGraph::copy() const
         { return std::make_unique< DirectedGraph >(*this); }
+
+        void DirectedGraph::depth_first_visit(const Index& u, Adjacency& non_colored, std::vector< Index >& order) const
+        {
+            for(Adjacency::const_iterator it = _parents[u].begin(), it_end = _parents[u].end(); it != it_end; ++it)
+            {
+                if(non_colored.find(*it) != non_colored.end())
+                {
+                    non_colored.erase(*it);
+                    depth_first_visit(*it, non_colored, order);
+                }
+            }
+            order.push_back(u);  
+        }
     }
 }
