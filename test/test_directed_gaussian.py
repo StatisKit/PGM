@@ -38,7 +38,7 @@ class TestDirectedGaussianDistribution(unittest.TestCase):
         """Test directed Gaussian distribution ML estimation"""
         cge = pgm.graphical_gaussian_estimation('DG', self._data, graph=self._dist.graph)
         predictor = cge.estimated.predictors[1]
-        print predictor.alpha, predictor.delta
+        print predictor.alpha, predictor.delta, cge.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data)
         self.assertGreaterEqual(cge.estimated.loglikelihood(self._data), self._dist.loglikelihood(self._data))
 
     @classmethod

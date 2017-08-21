@@ -73,6 +73,7 @@ namespace statiskit
             {
                 if(event->size() == get_nb_components())
                 {
+                    p = 0.;
                     for(Index index = 0, max_index = get_nb_components(); index < max_index; ++index)
                     {
                         const Adjacency& pa = _graph->parents(index);
