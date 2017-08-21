@@ -33,17 +33,13 @@ void wrapper_e07a205746f85b919e87bd473c31dd4f()
     boost::python::object module_dc77b0ee13d1530bb0798585443c555b(boost::python::handle<  >(boost::python::borrowed(PyImport_AddModule(name_dc77b0ee13d1530bb0798585443c555b.c_str()))));
     boost::python::scope().attr("_chordal_gaussian_distribution_ml_estimation") = module_dc77b0ee13d1530bb0798585443c555b;
     boost::python::scope scope_dc77b0ee13d1530bb0798585443c555b = module_dc77b0ee13d1530bb0798585443c555b;
-    enum ::statiskit::linalg::solver_type const & (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_8e927a59521d5cc3a84dc9fc5b0d811f)() const = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::get_solver;
-    void  (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_f087a20b9e5350f28959d47d1b9fa14a)(enum ::statiskit::linalg::solver_type const &) = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::set_solver;
-    class ::statiskit::pgm::DirectedGraph const * (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_3e809971d6385ae2a7ea14f5f0a4c11e)() const = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::get_graph;
-    void  (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_7a729f42de26597ba0d8f9c6f40e703c)(class ::statiskit::pgm::DirectedGraph const &) = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::set_graph;
+    class ::statiskit::pgm::UndirectedGraph const * (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_3e809971d6385ae2a7ea14f5f0a4c11e)() const = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::get_graph;
+    void  (::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::*method_pointer_617d51f0b4b15318b33faa5dffd4f381)(class ::statiskit::pgm::UndirectedGraph const &) = &::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator::set_graph;
     boost::python::class_< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator, autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator >::Type, boost::python::bases< struct ::statiskit::ContinuousMultivariateDistributionEstimation::Estimator > > class_e07a205746f85b919e87bd473c31dd4f("Estimator", "", boost::python::no_init);
     class_e07a205746f85b919e87bd473c31dd4f.def(boost::python::init<  >(""));
     class_e07a205746f85b919e87bd473c31dd4f.def(boost::python::init< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator const & >(""));
-    class_e07a205746f85b919e87bd473c31dd4f.def("get_solver", method_pointer_8e927a59521d5cc3a84dc9fc5b0d811f, boost::python::return_value_policy< boost::python::return_by_value >(), "");
-    class_e07a205746f85b919e87bd473c31dd4f.def("set_solver", method_pointer_f087a20b9e5350f28959d47d1b9fa14a, "");
     class_e07a205746f85b919e87bd473c31dd4f.def("get_graph", method_pointer_3e809971d6385ae2a7ea14f5f0a4c11e, boost::python::return_value_policy< boost::python::reference_existing_object >(), "");
-    class_e07a205746f85b919e87bd473c31dd4f.def("set_graph", method_pointer_7a729f42de26597ba0d8f9c6f40e703c, "");
+    class_e07a205746f85b919e87bd473c31dd4f.def("set_graph", method_pointer_617d51f0b4b15318b33faa5dffd4f381, "");
 
     if(autowig::Held< class ::statiskit::pgm::ChordalGaussianDistributionMLEstimation::Estimator >::is_class)
     {
