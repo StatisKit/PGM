@@ -666,13 +666,14 @@ namespace statiskit
         bool DirectedGraph::is_acyclic() const
         {
             std::vector< Index > order = depth_first_search();
+            std::reverse(order.begin(), order.end());
             std::unordered_set< Index > colored;
             bool is = true;
             Index u = 0, max_u = get_nb_vertices();
             while(is && u < max_u)
             {
-                colored.insert(u);
-                const Adjacency& pa = parents(u);
+                colored.insert(order[u]);
+                const Adjacency& pa = parents(order[u]);
                 for(Adjacency::const_iterator it = pa.cbegin(), it_end = pa.cend(); it != it_end; ++it)
                 {
                     if(colored.find(*it) != colored.end())

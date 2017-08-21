@@ -15,12 +15,12 @@ namespace statiskit
 {
     namespace pgm
     {
-        class STATISKIT_PGM_API ChordalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, ChordalGaussianDistribution, ContinuousMultivariateDistribution >
+        class STATISKIT_PGM_API DirectedGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, DirectedGaussianDistribution, ContinuousMultivariateDistribution >
         {
             public:
-                ChordalGaussianDistribution(const DirectedGraph& graph);
-                ChordalGaussianDistribution(const ChordalGaussianDistribution& gaussian);
-                virtual ~ChordalGaussianDistribution();
+                DirectedGaussianDistribution(const DirectedGraph& graph);
+                DirectedGaussianDistribution(const DirectedGaussianDistribution& gaussian);
+                virtual ~DirectedGaussianDistribution();
 
                 virtual Index get_nb_components() const;
 
@@ -48,13 +48,13 @@ namespace statiskit
                 Eigen::VectorXd _sigma;
         };
 
-        class STATISKIT_PGM_API ChordalGaussianDistributionMLEstimation : public ActiveEstimation< ChordalGaussianDistribution, ContinuousMultivariateDistributionEstimation >
+        class STATISKIT_PGM_API DirectedGaussianDistributionMLEstimation : public ActiveEstimation< DirectedGaussianDistribution, ContinuousMultivariateDistributionEstimation >
         {
             public:
-                ChordalGaussianDistributionMLEstimation();
-                ChordalGaussianDistributionMLEstimation(ChordalGaussianDistribution const * estimated, MultivariateData const * data);
-                ChordalGaussianDistributionMLEstimation(const ChordalGaussianDistributionMLEstimation& estimation);
-                virtual ~ChordalGaussianDistributionMLEstimation();
+                DirectedGaussianDistributionMLEstimation();
+                DirectedGaussianDistributionMLEstimation(DirectedGaussianDistribution const * estimated, MultivariateData const * data);
+                DirectedGaussianDistributionMLEstimation(const DirectedGaussianDistributionMLEstimation& estimation);
+                virtual ~DirectedGaussianDistributionMLEstimation();
 
                 class STATISKIT_PGM_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
                 {
@@ -81,13 +81,13 @@ namespace statiskit
                 };
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, GraphicalGaussianDistribution, ContinuousMultivariateDistribution >
+        class STATISKIT_PGM_API UndirectedGaussianDistribution : public PolymorphicCopy< MultivariateDistribution, UndirectedGaussianDistribution, ContinuousMultivariateDistribution >
         {
             public:
-                GraphicalGaussianDistribution(const Eigen::VectorXd& mu);
-                GraphicalGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& sigma);
-                GraphicalGaussianDistribution(const GraphicalGaussianDistribution& gaussian);
-                virtual ~GraphicalGaussianDistribution();
+                UndirectedGaussianDistribution(const Eigen::VectorXd& mu);
+                UndirectedGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& sigma);
+                UndirectedGaussianDistribution(const UndirectedGaussianDistribution& gaussian);
+                virtual ~UndirectedGaussianDistribution();
 
                 virtual Index get_nb_components() const;
 
@@ -116,13 +116,13 @@ namespace statiskit
                 double _determinant;
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistributionMLEstimation : public ActiveEstimation< GraphicalGaussianDistribution, ContinuousMultivariateDistributionEstimation >
+        class STATISKIT_PGM_API ChordalGaussianDistributionMLEstimation : public ActiveEstimation< UndirectedGaussianDistribution, ContinuousMultivariateDistributionEstimation >
         {
             public:
-                GraphicalGaussianDistributionMLEstimation();
-                GraphicalGaussianDistributionMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
-                GraphicalGaussianDistributionMLEstimation(const GraphicalGaussianDistributionMLEstimation& estimation);
-                virtual ~GraphicalGaussianDistributionMLEstimation();
+                ChordalGaussianDistributionMLEstimation();
+                ChordalGaussianDistributionMLEstimation(UndirectedGaussianDistribution const * estimated, MultivariateData const * data);
+                ChordalGaussianDistributionMLEstimation(const ChordalGaussianDistributionMLEstimation& estimation);
+                virtual ~ChordalGaussianDistributionMLEstimation();
 
                 class STATISKIT_PGM_API Estimator : public ContinuousMultivariateDistributionEstimation::Estimator
                 {
@@ -143,16 +143,16 @@ namespace statiskit
                 };
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistributionIMLEstimation : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        class STATISKIT_PGM_API UndirectedGaussianDistributionIMLEstimation : public OptimizationEstimation< statiskit::linalg::Matrix, UndirectedGaussianDistribution, ChordalGaussianDistributionMLEstimation >
         {
             public:
-                GraphicalGaussianDistributionIMLEstimation();
-                GraphicalGaussianDistributionIMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
-                GraphicalGaussianDistributionIMLEstimation(const GraphicalGaussianDistributionIMLEstimation& estimation);
-                virtual ~GraphicalGaussianDistributionIMLEstimation();
+                UndirectedGaussianDistributionIMLEstimation();
+                UndirectedGaussianDistributionIMLEstimation(UndirectedGaussianDistribution const * estimated, MultivariateData const * data);
+                UndirectedGaussianDistributionIMLEstimation(const UndirectedGaussianDistributionIMLEstimation& estimation);
+                virtual ~UndirectedGaussianDistributionIMLEstimation();
 
 
-                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::Matrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::Matrix, UndirectedGaussianDistribution, ChordalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
                         Estimator();
@@ -168,11 +168,11 @@ namespace statiskit
                         statiskit::linalg::solver_type _inverser;
                 };
 
-                struct STATISKIT_PGM_API CDEstimator : public Estimator
+                struct STATISKIT_PGM_API GAEstimator : public Estimator
                 {
-                    CDEstimator();
-                    CDEstimator(const CDEstimator& estimator);
-                    virtual ~CDEstimator();
+                    GAEstimator();
+                    GAEstimator(const GAEstimator& estimator);
+                    virtual ~GAEstimator();
 
                     virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
@@ -206,15 +206,15 @@ namespace statiskit
                 };
         };
 
-        class STATISKIT_PGM_API GraphicalGaussianDistributionSIMLEstimation : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >
+        class STATISKIT_PGM_API UndirectedGaussianDistributionSIMLEstimation : public OptimizationEstimation< statiskit::linalg::SparseMatrix, UndirectedGaussianDistribution, ChordalGaussianDistributionMLEstimation >
         {
             public:
-                GraphicalGaussianDistributionSIMLEstimation();
-                GraphicalGaussianDistributionSIMLEstimation(GraphicalGaussianDistribution const * estimated, MultivariateData const * data);
-                GraphicalGaussianDistributionSIMLEstimation(const GraphicalGaussianDistributionSIMLEstimation& estimation);
-                virtual ~GraphicalGaussianDistributionSIMLEstimation();
+                UndirectedGaussianDistributionSIMLEstimation();
+                UndirectedGaussianDistributionSIMLEstimation(UndirectedGaussianDistribution const * estimated, MultivariateData const * data);
+                UndirectedGaussianDistributionSIMLEstimation(const UndirectedGaussianDistributionSIMLEstimation& estimation);
+                virtual ~UndirectedGaussianDistributionSIMLEstimation();
 
-                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::SparseMatrix, GraphicalGaussianDistribution, GraphicalGaussianDistributionMLEstimation >::Estimator
+                class STATISKIT_PGM_API Estimator : public OptimizationEstimation< statiskit::linalg::SparseMatrix, UndirectedGaussianDistribution, ChordalGaussianDistributionMLEstimation >::Estimator
                 {
                     public:
                         Estimator();
@@ -230,12 +230,12 @@ namespace statiskit
                         statiskit::linalg::sparse_solver_type _inverser;
                 };
 
-                class STATISKIT_PGM_API CDEstimator : public Estimator
+                class STATISKIT_PGM_API GAEstimator : public Estimator
                 {
                     public:
-                        CDEstimator();
-                        CDEstimator(const CDEstimator& estimator);
-                        virtual ~CDEstimator();
+                        GAEstimator();
+                        GAEstimator(const GAEstimator& estimator);
+                        virtual ~GAEstimator();
 
                         virtual std::unique_ptr< MultivariateDistributionEstimation > operator() (const MultivariateData& data, const bool& lazy=true) const;
 
