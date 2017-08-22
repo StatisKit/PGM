@@ -41,7 +41,7 @@ void wrapper_331ef33706e258869683f17891e9bdb0()
     bool  (::statiskit::pgm::UndirectedGraph::*method_pointer_d163621b5bcd5333a83ced5198310632)(::statiskit::Index const &, ::statiskit::Index const &, ::statiskit::Indices const &) const = &::statiskit::pgm::UndirectedGraph::are_separated;
     bool  (::statiskit::pgm::UndirectedGraph::*method_pointer_54fd624378735a46a4cccc028376ae7a)(::statiskit::Indices const &, ::statiskit::Indices const &, ::statiskit::Indices const &) const = &::statiskit::pgm::UndirectedGraph::are_separated;
     class ::std::vector< unsigned long int, class ::std::allocator< unsigned long int > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_b863d7cff2bf505990d7dd2666f1231e)() const = &::statiskit::pgm::UndirectedGraph::maximum_cardinality_search;
-    class ::std::unique_ptr< class ::statiskit::pgm::UndirectedGraph, struct ::std::default_delete< class ::statiskit::pgm::UndirectedGraph > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_1a5f753d4d22575ab2cc026e209f811c)(bool const &) const = &::statiskit::pgm::UndirectedGraph::maximum_cardinality_embedding;
+    class ::std::unique_ptr< class ::statiskit::pgm::UndirectedGraph, struct ::std::default_delete< class ::statiskit::pgm::UndirectedGraph > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_76fbe82649c25776989ff69ca75cb4ee)() const = &::statiskit::pgm::UndirectedGraph::maximum_cardinality_embedding;
     class ::std::unique_ptr< class ::statiskit::pgm::DirectedGraph, struct ::std::default_delete< class ::statiskit::pgm::DirectedGraph > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_e2b4416bfceb521eaa964b02906c3ecd)() const = &::statiskit::pgm::UndirectedGraph::directed_graph;
     class ::std::vector< unsigned long int, class ::std::allocator< unsigned long int > >  (::statiskit::pgm::UndirectedGraph::*method_pointer_f05fc960b1a85c918a7ae9e3f9489fb6)() const = &::statiskit::pgm::UndirectedGraph::depth_first_search;
     bool  (::statiskit::pgm::UndirectedGraph::*method_pointer_7801bcf992eb510f9442354f964f36b4)() const = &::statiskit::pgm::UndirectedGraph::is_chordal;
@@ -65,7 +65,7 @@ void wrapper_331ef33706e258869683f17891e9bdb0()
     class_331ef33706e258869683f17891e9bdb0.def("are_separated", method_pointer_d163621b5bcd5333a83ced5198310632, "");
     class_331ef33706e258869683f17891e9bdb0.def("are_separated", method_pointer_54fd624378735a46a4cccc028376ae7a, "");
     class_331ef33706e258869683f17891e9bdb0.def("maximum_cardinality_search", method_pointer_b863d7cff2bf505990d7dd2666f1231e, "");
-    class_331ef33706e258869683f17891e9bdb0.def("maximum_cardinality_embedding", method_pointer_1a5f753d4d22575ab2cc026e209f811c, "");
+    class_331ef33706e258869683f17891e9bdb0.def("maximum_cardinality_embedding", method_pointer_76fbe82649c25776989ff69ca75cb4ee, "");
     class_331ef33706e258869683f17891e9bdb0.def("directed_graph", method_pointer_e2b4416bfceb521eaa964b02906c3ecd, "");
     class_331ef33706e258869683f17891e9bdb0.def("depth_first_search", method_pointer_f05fc960b1a85c918a7ae9e3f9489fb6, "");
     class_331ef33706e258869683f17891e9bdb0.def("is_chordal", method_pointer_7801bcf992eb510f9442354f964f36b4, "");

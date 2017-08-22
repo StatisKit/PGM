@@ -116,7 +116,7 @@ namespace statiskit
 
                 std::vector< Index > maximum_cardinality_search() const;
 
-                std::unique_ptr< UndirectedGraph > maximum_cardinality_embedding(const bool& elimination=false) const;
+                std::unique_ptr< UndirectedGraph > maximum_cardinality_embedding() const; //const bool& elimination=false) const;
 
                 std::unique_ptr< DirectedGraph > directed_graph() const;
                 

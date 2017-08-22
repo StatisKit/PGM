@@ -59,8 +59,9 @@ class TestUndirectedGraph(unittest.TestCase):
                                                    [0.0, 1.0, 0.0, 1.0],
                                                    [1.0, 0.0, 1.0, 0.0]]))
         self.assertFalse(graph.is_chordal)
-        self.assertTrue(graph.maximum_cardinality_embedding(True).is_chordal)
-        self.assertTrue(graph.maximum_cardinality_embedding(False).is_chordal)
+        self.assertTrue(graph.maximum_cardinality_embedding().is_chordal)
+        # self.assertTrue(graph.maximum_cardinality_embedding(True).is_chordal)
+        # self.assertTrue(graph.maximum_cardinality_embedding(False).is_chordal)
 
     def test_clique_tree(self):
         """Test undirected graph clique tree"""
