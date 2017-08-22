@@ -124,50 +124,50 @@ namespace statiskit
             return rank;
         }
 
-        std::unique_ptr< UndirectedGraph > UndirectedGraph::maximum_cardinality_embedding(const bool& elimination) const
+        std::unique_ptr< UndirectedGraph > UndirectedGraph::maximum_cardinality_embedding() const //const bool& elimination) const
         {
             std::unique_ptr< UndirectedGraph > graph;
-            if(elimination)
-            { graph = elimination_game(rank_to_ordering(maximum_cardinality_search())); }
-            else
-            {
-                graph = copy();
-                std::vector< Index > w(get_nb_vertices(), 1);
-                Adjacency non_colored;
-                for(Index u = 0, v = get_nb_vertices(); u < v; ++u)
-                { non_colored.insert(non_colored.end(), u); }
-                while(non_colored.size() > 0)
-                {
-                    Index u = distance(w.begin(), std::max_element(w.begin(), w.end()));
-                    non_colored.erase(u);
-                    Indices N;
-                    for(Index v = 0; v < u; ++v)
-                    { 
-                        if(w[v] == 0 || w[v] >= w[u])
-                        { N.insert(v); }
-                    }
-                    for(Index v = u + 1, max_v = get_nb_vertices(); v < max_v; ++v)
-                    { 
-                        if(w[v] == 0 || w[v] >= w[u])
-                        { N.insert(v); }
-                    }
-                    Adjacency S;
-                    for(Adjacency::const_iterator it = non_colored.begin(), it_end = non_colored.end(); it != it_end; ++it)
-                    {
-                        N.erase(*it);
-                        if(!are_separated(u, *it, N))
-                        { S.insert(*it); }
-                        N.insert(*it);
-                    }
-                    for(Adjacency::const_iterator it = S.begin(), it_end = S.end(); it != it_end; ++it)
-                    { 
-                        ++w[*it];
-                        if(!graph->has_edge(u, *it))
-                        { graph->add_edge(u, *it); }
-                    }
-                    w[u] = 0;
-                }
-            }
+            // if(elimination)
+            graph = elimination_game(rank_to_ordering(maximum_cardinality_search()));
+            // else
+            // {
+            //     graph = copy();
+            //     std::vector< Index > w(get_nb_vertices(), 1);
+            //     Adjacency non_colored;
+            //     for(Index u = 0, v = get_nb_vertices(); u < v; ++u)
+            //     { non_colored.insert(non_colored.end(), u); }
+            //     while(non_colored.size() > 0)
+            //     {
+            //         Index u = distance(w.begin(), std::max_element(w.begin(), w.end()));
+            //         non_colored.erase(u);
+            //         Indices N;
+            //         for(Index v = 0; v < u; ++v)
+            //         { 
+            //             if(w[v] == 0 || w[v] >= w[u])
+            //             { N.insert(v); }
+            //         }
+            //         for(Index v = u + 1, max_v = get_nb_vertices(); v < max_v; ++v)
+            //         { 
+            //             if(w[v] == 0 || w[v] >= w[u])
+            //             { N.insert(v); }
+            //         }
+            //         Adjacency S;
+            //         for(Adjacency::const_iterator it = non_colored.begin(), it_end = non_colored.end(); it != it_end; ++it)
+            //         {
+            //             N.erase(*it);
+            //             if(!are_separated(u, *it, N))
+            //             { S.insert(*it); }
+            //             N.insert(*it);
+            //         }
+            //         for(Adjacency::const_iterator it = S.begin(), it_end = S.end(); it != it_end; ++it)
+            //         { 
+            //             ++w[*it];
+            //             if(!graph->has_edge(u, *it))
+            //             { graph->add_edge(u, *it); }
+            //         }
+            //         w[u] = 0;
+            //     }
+            // }
             return std::move(graph);
         }
 
@@ -241,9 +241,11 @@ namespace statiskit
                     { ne.erase(itn); }
                     ++it;
                 }
-                ne.insert(w);
-                if(ne.size() > 1)
-                { chordal = is_clique(ne); }
+                if(ne.size() > 0)
+                { 
+                    ne.insert(w);
+                    chordal = is_clique(ne);
+                }
                 colored.insert(w);
                 ++u;
             }
