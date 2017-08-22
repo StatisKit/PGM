@@ -85,7 +85,7 @@ namespace statiskit
         {
             public:
                 UndirectedGaussianDistribution(const Eigen::VectorXd& mu);
-                UndirectedGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& sigma);
+                UndirectedGaussianDistribution(const Eigen::VectorXd& mu, const Eigen::MatrixXd& theta);
                 UndirectedGaussianDistribution(const UndirectedGaussianDistribution& gaussian);
                 virtual ~UndirectedGaussianDistribution();
 
